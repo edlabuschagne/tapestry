@@ -1,0 +1,8 @@
+$ flutter build apk --debug
+(first-run Gradle task also installed missing Android SDK Build-Tools 36,
+Platform 36, NDK 28.2.13676358, and CMake 3.22.1 components; all licenses
+auto-accepted since `flutter doctor --android-licenses` had already accepted
+them for this SDK installation)
+Running Gradle task 'assembleDebug'...                            506.3s
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+EXIT=0

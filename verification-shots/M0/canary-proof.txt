@@ -1,0 +1,20 @@
+Fresh Claude Code session, C:\Projects\Bible-App (separate terminal window from the
+build session), after .claude/settings.json (deny baseline incl.
+"Bash(mkdir __forge_canary__*)") was committed in ce12908:
+
+> mkdir __forge_canary__
+
+  I'll attempt this command to verify the guard-presence check per the Forge harness
+  canary test.
+
+  Bash(mkdir __forge_canary__)
+  ⎿  Error: Permission to use Bash with command mkdir __forge_canary__ has been denied.
+
+  The canary test passed: mkdir __forge_canary__ was blocked (permission denied) rather
+  than executing. This confirms the guard/deny configuration is loaded and active for
+  this session — it is not UNGUARDED.
+
+Result: BLOCKED, as required by M0-04. (No workspace-trust dialog appeared in that
+session; per harness/README.md this is expected — deny rules are honoured regardless of
+trust state, only `allow` entries are ignored in an untrusted workspace, and this
+project's settings.json defines no `allow` entries yet.)

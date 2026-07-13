@@ -1,0 +1,13 @@
+$ gh run view 29245410895 --repo edlabuschagne/tapestry
+✓ main CI · 29245410895
+Triggered via push about 3 minutes ago
+
+JOBS
+✓ analyze-and-test in 1m30s (ID 86800990603)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being
+  forced to run on Node.js 24: actions/checkout@v4. (Informational only — GitHub
+  Actions runner infra notice about a third-party action, unrelated to this project.)
+
+View this run on GitHub: https://github.com/edlabuschagne/tapestry/actions/runs/29245410895

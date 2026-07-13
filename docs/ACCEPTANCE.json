@@ -6,12 +6,12 @@
       "name": "Bootstrap",
       "autonomy": "needs-human-check",
       "criteria": [
-        { "id": "M0-01", "text": "flutter doctor exits 0 for Android + web toolchains (captured output)", "passes": false, "evidence": "" },
-        { "id": "M0-02", "text": "flutter build web and flutter build apk --debug both exit 0", "passes": false, "evidence": "" },
-        { "id": "M0-03", "text": "App launches showing a Tapestry placeholder screen (screenshot)", "passes": false, "evidence": "" },
-        { "id": "M0-04", "text": "mkdir __forge_canary__ is BLOCKED in a Claude Code session (guard proof)", "passes": false, "evidence": "" },
-        { "id": "M0-05", "text": "CI runs analyze + test green on push (link to run)", "passes": false, "evidence": "" },
-        { "id": "M0-06", "text": "Secrets pattern gitignored from commit zero", "passes": false, "evidence": "" }
+        { "id": "M0-01", "text": "flutter doctor exits 0 for Android + web toolchains (captured output)", "passes": true, "evidence": "verification-shots/M0/flutter-doctor.txt — exit 0; Android toolchain and Chrome/web both [√]" },
+        { "id": "M0-02", "text": "flutter build web and flutter build apk --debug both exit 0", "passes": true, "evidence": "verification-shots/M0/build-web.txt and verification-shots/M0/build-apk-debug.txt — both exit 0" },
+        { "id": "M0-03", "text": "App launches showing a Tapestry placeholder screen (screenshot)", "passes": true, "evidence": "verification-shots/M0/M0-03-launch.png (lib/main.dart TapestryApp/PlaceholderScreen); test/widget_test.dart passing. forge-debt: captured via static-serve + Playwright screenshot, not Flutter's integration_test harness — no emulator available yet, see HANDOFF.md debt ledger" },
+        { "id": "M0-04", "text": "mkdir __forge_canary__ is BLOCKED in a Claude Code session (guard proof)", "passes": true, "evidence": "verification-shots/M0/canary-proof.txt — fresh session, command denied by .claude/settings.json deny rule" },
+        { "id": "M0-05", "text": "CI runs analyze + test green on push (link to run)", "passes": true, "evidence": "https://github.com/edlabuschagne/tapestry/actions/runs/29245410895 (verification-shots/M0/ci-run.txt) — analyze-and-test passed in 1m30s" },
+        { "id": "M0-06", "text": "Secrets pattern gitignored from commit zero", "passes": true, "evidence": ".gitignore:2-5 (.env, .env.*, *.secret, **/secrets.dart) present in root commit ce12908" }
       ]
     },
     {
