@@ -1,34 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:tapestry/data/db_connection.dart';
+import 'package:tapestry/data/local_store.dart';
+import 'package:tapestry/ui/home_screen.dart';
 
-void main() {
-  runApp(const TapestryApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final store = await openLocalStore();
+  runApp(TapestryApp(store: store));
 }
 
 class TapestryApp extends StatelessWidget {
-  const TapestryApp({super.key});
+  final LocalStore store;
+
+  const TapestryApp({super.key, required this.store});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Tapestry',
       theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
-      home: const PlaceholderScreen(),
-    );
-  }
-}
-
-class PlaceholderScreen extends StatelessWidget {
-  const PlaceholderScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(
-          'Tapestry',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-      ),
+      home: HomeScreen(store: store),
     );
   }
 }

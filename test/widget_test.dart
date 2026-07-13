@@ -1,13 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:tapestry/main.dart';
 
+import 'support/test_store.dart';
+
 void main() {
-  testWidgets('App launches showing the Tapestry placeholder screen', (
+  testWidgets('App launches showing the book list, starting with Genesis', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const TapestryApp());
+    final store = await openTestStore();
+    addTearDown(store.close);
+
+    await tester.pumpWidget(TapestryApp(store: store));
+    await tester.pumpAndSettle();
 
     expect(find.text('Tapestry'), findsOneWidget);
+    expect(find.text('Genesis'), findsOneWidget);
   });
 }

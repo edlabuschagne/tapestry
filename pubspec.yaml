@@ -36,10 +36,20 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # tool/build_db.dart writes assets/bible.db with this (native SQLite bindings).
-  # Per ARCHITECTURE.md, drift itself (the app's runtime query layer) is a
-  # Milestone 2 concern — this is only the pipeline's raw writer, already implied
-  # by the decided "drift over a bundled prebuilt SQLite file" architecture.
   sqlite3: ^2.4.6
+
+  # M2's runtime query layer, per ARCHITECTURE.md's decided "drift over a bundled
+  # prebuilt SQLite file" architecture — same query code on native and web/WASM.
+  drift: ^2.22.1
+  # Bundles native sqlite3 libraries so drift has something to link against on
+  # Android (unlike a bundled asset file, drift's native backend needs the
+  # actual shared library, not just data).
+  sqlite3_flutter_libs: ^0.5.27
+  # Finds a writable app directory to copy the bundled read-only assets/bible.db
+  # into on first launch (Android can't open a database file straight out of the
+  # asset bundle).
+  path_provider: ^2.1.5
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +62,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  # Code generation for the drift tables/database class below.
+  drift_dev: ^2.22.1
+  build_runner: ^2.4.13
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -63,10 +77,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/bible.db
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
