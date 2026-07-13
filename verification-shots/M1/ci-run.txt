@@ -1,0 +1,8 @@
+$ gh run view 29248783564 --repo edlabuschagne/tapestry
+✓ main CI · 29248783564
+Triggered via push about 2 minutes ago
+
+JOBS
+✓ analyze-and-test in 1m42s (ID 86812000789)
+
+View this run on GitHub: https://github.com/edlabuschagne/tapestry/actions/runs/29248783564
