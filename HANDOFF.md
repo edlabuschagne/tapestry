@@ -4,8 +4,23 @@
 > This file holds judgment: what's built, decisions and why, known issues, next steps.
 
 ## Current state
-Milestone 0 (Bootstrap) build complete, not yet gated. Awaiting `/forge-verify` and
-human review (M0 is `needs-human-check`).
+Milestone 0 (Bootstrap) built, gated, and awaiting **human review** — stopped here per
+the `needs-human-check` autonomy tag, regardless of the gate verdict below. Do not
+proceed to Milestone 1 without explicit sign-off.
+
+## Gate result — /forge-verify, 2026-07-13
+**Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). Full Gate Report
+shared with the human in the session transcript. Summary:
+- All 6 acceptance criteria (M0-01…M0-06) verified against real evidence in
+  `verification-shots/M0/`; no tampering in `docs/ACCEPTANCE.json` (only
+  `passes`/`evidence` changed).
+- No scope creep, no tripwire crossed, canary proof confirmed.
+- One note (not a FAIL): M0-03's screenshot was captured via a disclosed
+  static-serve + Playwright workaround rather than Flutter's own `integration_test`
+  harness — see debt ledger below. Verifier judged this a valid, non-conforming but
+  non-contradicting capture.
+- One immaterial wording drift flagged between MILESTONES.md and ACCEPTANCE.json on
+  M0-06's text (pre-existing, not an executor edit).
 
 ## What's built
 - Git repo initialized; `.gitignore` (secrets, build artefacts, IDE) and `.gitattributes`
@@ -61,11 +76,11 @@ Cumulative: 1 open, low severity. Well under the STOP threshold (8 open / 3 medi
 None outstanding in the built code.
 
 ## Next steps
-1. Human: accept the workspace trust dialog in one interactive Claude Code session.
-2. Prove the canary (`mkdir __forge_canary__` must be BLOCKED) in a fresh session —
-   M0-04.
-3. Self-check every M0 criterion in `docs/ACCEPTANCE.json`, flip `passes`/`evidence`
-   only.
-4. Run `/forge-verify`, share the Gate Report.
-5. STOP — M0 is `needs-human-check`; do not proceed to Milestone 1 without explicit
-   human review, regardless of verdict.
+1. **Human review of Milestone 0 (waiting now).** Nothing proceeds until you review
+   the Gate Report and either approve moving to Milestone 1 or send back changes.
+2. When approved: start Milestone 1 (the data forge / `tool/build_db.dart`) fresh —
+   it's `auto-verifiable`, so that run can proceed on its own PASS.
+3. Carry forward the one open debt item: get a real Android emulator or the phone
+   connected by Milestone 2 (it needs one anyway for the airplane-mode criterion),
+   and re-capture M0-03 plus M2's screenshots through `flutter test integration_test`
+   instead of the ad hoc method used here.
