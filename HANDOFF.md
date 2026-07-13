@@ -4,9 +4,29 @@
 > This file holds judgment: what's built, decisions and why, known issues, next steps.
 
 ## Current state
-Milestone 0 approved by the human (2026-07-13). Milestone 1 (The data forge) built,
-self-checked, awaiting its `/forge-verify` gate. `auto-verifiable` — proceeds to
-Milestone 2 on its own PASS/PASS-WITH-NOTES, no human stop required (unlike M0).
+Milestone 0 approved by the human (2026-07-13). Milestone 1 (The data forge) gated
+PASS-WITH-NOTES (2026-07-13) and proceeded automatically per its `auto-verifiable` tag.
+Now starting Milestone 2 (The reader).
+
+## Gate result — Milestone 1, /forge-verify, 2026-07-13
+**Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). All 6 acceptance
+criteria verified against real pipeline stdout, a direct SQL query against the actual
+built `assets/bible.db`, and 26 passing tests over the real vendored data. No
+tampering, clean DO-NOT-BUILD compliance, no secrets, guard config unchanged, genuine
+input validation and write-temp/validate/atomic-swap safety confirmed.
+
+Three notes: (1) the Verifier flagged that adding `sqlite3` as a new pub.dev dependency
+had no recorded approval — true, I added it reasoning it was implied by
+ARCHITECTURE.md's already-decided drift/SQLite direction, but should have asked first.
+**Asked the human afterward; approved retroactively** (2026-07-13) as the minimal,
+correct implementation of that existing decision, not a scope expansion. (2) A
+mismatch in my own gate-briefing — I told the Verifier to expect two inline
+`forge-debt` code markers; only one exists (the M0-03 item is a HANDOFF.md note, never
+a code marker, so this wasn't a real finding). (3) The db swap
+(`tool/src/sqlite_writer.dart`) is delete-then-rename, not one atomic OS call — doesn't
+violate the actual invariant (bad build never overwrites a good db) but is marginally
+less bulletproof than a true atomic replace. Low severity, not urgent; worth revisiting
+if this pipeline ever runs somewhere crashes are likely mid-swap.
 
 ## Gate result — /forge-verify, 2026-07-13
 **Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). Full Gate Report
@@ -149,9 +169,13 @@ medium).
   validation working as designed.
 
 ## Next steps
-1. Run `/forge-verify` for Milestone 1 (auto-verifiable — proceeds to Milestone 2 on
-   its own PASS/PASS-WITH-NOTES).
-2. Carry forward the M0-03 debt item: get a real Android emulator or the phone
-   connected by Milestone 2 (it needs one anyway for the airplane-mode criterion),
-   and re-capture M0-03 plus M2's screenshots through `flutter test integration_test`
-   instead of the ad hoc method used here.
+1. Build Milestone 2 (The reader): book/chapter navigation, ReaderScreen rendering a
+   passage (heading + verses, verse-number anchors), prev/next passage, drift wiring
+   of the bundled `assets/bible.db` on both Android and web.
+2. Get a real Android emulator or the phone connected before M2's gate — needed for
+   the airplane-mode criterion (M2-03) regardless, and also lets M0-03's screenshot
+   (carried-forward debt) finally be re-captured through `flutter test
+   integration_test` instead of the ad hoc static-serve method used at M0.
+3. Add `drift` as a dependency when M2 actually starts querying the database — ask
+   before adding it, even though it's the same already-decided architecture, per the
+   process gap flagged at M1's gate.
