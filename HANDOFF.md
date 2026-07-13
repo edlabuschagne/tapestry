@@ -4,9 +4,9 @@
 > This file holds judgment: what's built, decisions and why, known issues, next steps.
 
 ## Current state
-Milestone 0 (Bootstrap) built, gated, and awaiting **human review** — stopped here per
-the `needs-human-check` autonomy tag, regardless of the gate verdict below. Do not
-proceed to Milestone 1 without explicit sign-off.
+Milestone 0 (Bootstrap) **approved by the human** (2026-07-13) following its
+PASS-WITH-NOTES gate. Now starting Milestone 1 (The data forge), which is
+`auto-verifiable`.
 
 ## Gate result — /forge-verify, 2026-07-13
 **Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). Full Gate Report
@@ -76,11 +76,9 @@ Cumulative: 1 open, low severity. Well under the STOP threshold (8 open / 3 medi
 None outstanding in the built code.
 
 ## Next steps
-1. **Human review of Milestone 0 (waiting now).** Nothing proceeds until you review
-   the Gate Report and either approve moving to Milestone 1 or send back changes.
-2. When approved: start Milestone 1 (the data forge / `tool/build_db.dart`) fresh —
-   it's `auto-verifiable`, so that run can proceed on its own PASS.
-3. Carry forward the one open debt item: get a real Android emulator or the phone
+1. Build Milestone 1: `tool/build_db.dart`, ingesting BSB text + OpenBible.info
+   cross-references into `assets/bible.db` (drift/SQLite, per ARCHITECTURE.md).
+2. Carry forward the one open debt item: get a real Android emulator or the phone
    connected by Milestone 2 (it needs one anyway for the airplane-mode criterion),
    and re-capture M0-03 plus M2's screenshots through `flutter test integration_test`
    instead of the ad hoc method used here.
