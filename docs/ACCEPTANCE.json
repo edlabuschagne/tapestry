@@ -1,0 +1,77 @@
+{
+  "_contract": "Executor may change ONLY 'passes' and 'evidence'. Flipping passes to true requires evidence (test name or file:line) in the same edit. Removing, rewording, reordering, or adding criteria is tampering: Verifier FAIL regardless of code quality. Criteria change only in planning, with the human.",
+  "milestones": [
+    {
+      "milestone": 0,
+      "name": "Bootstrap",
+      "autonomy": "needs-human-check",
+      "criteria": [
+        { "id": "M0-01", "text": "flutter doctor exits 0 for Android + web toolchains (captured output)", "passes": false, "evidence": "" },
+        { "id": "M0-02", "text": "flutter build web and flutter build apk --debug both exit 0", "passes": false, "evidence": "" },
+        { "id": "M0-03", "text": "App launches showing a Tapestry placeholder screen (screenshot)", "passes": false, "evidence": "" },
+        { "id": "M0-04", "text": "mkdir __forge_canary__ is BLOCKED in a Claude Code session (guard proof)", "passes": false, "evidence": "" },
+        { "id": "M0-05", "text": "CI runs analyze + test green on push (link to run)", "passes": false, "evidence": "" },
+        { "id": "M0-06", "text": "Secrets pattern gitignored from commit zero", "passes": false, "evidence": "" }
+      ]
+    },
+    {
+      "milestone": 1,
+      "name": "The data forge",
+      "autonomy": "auto-verifiable",
+      "criteria": [
+        { "id": "M1-01", "text": "dart run tool/build_db.dart exits 0 and writes assets/bible.db", "passes": false, "evidence": "" },
+        { "id": "M1-02", "text": "DB contains 66 books and >= 31000 BSB verses (captured query output)", "passes": false, "evidence": "" },
+        { "id": "M1-03", "text": "John 3:16 query returns BSB text containing 'only begotten' or 'one and only'", "passes": false, "evidence": "" },
+        { "id": "M1-04", "text": "Every verse maps to exactly one passage; Isaiah 53:5 passage spans within Isa 52:13-53:12 with a heading", "passes": false, "evidence": "" },
+        { "id": "M1-05", "text": "Top-weighted edge from the Isaiah 53 passage points to a New Testament passage", "passes": false, "evidence": "" },
+        { "id": "M1-06", "text": "No orphan edges (asserted by test)", "passes": false, "evidence": "" }
+      ]
+    },
+    {
+      "milestone": 2,
+      "name": "The reader",
+      "autonomy": "auto-verifiable",
+      "criteria": [
+        { "id": "M2-01", "text": "Isaiah 53 reachable in <=3 taps from launch; heading + full text shown (screenshot)", "passes": false, "evidence": "" },
+        { "id": "M2-02", "text": "Prev/next moves exactly one passage incl. Genesis-start and Malachi-end boundaries (test + screenshots)", "passes": false, "evidence": "" },
+        { "id": "M2-03", "text": "Airplane-mode Android launch renders a passage normally (screenshot)", "passes": false, "evidence": "" },
+        { "id": "M2-04", "text": "Web build renders the same passage in a browser (screenshot)", "passes": false, "evidence": "" }
+      ]
+    },
+    {
+      "milestone": 3,
+      "name": "The constellation",
+      "autonomy": "needs-human-check",
+      "criteria": [
+        { "id": "M3-01", "text": "Isaiah 53 constellation shows >=5 neighbours incl. at least one Gospel passage (screenshot)", "passes": false, "evidence": "" },
+        { "id": "M3-02", "text": "Layout deterministic: identical screenshots across two runs (golden test)", "passes": false, "evidence": "" },
+        { "id": "M3-03", "text": "Tapping a neighbour recenters graph AND updates reader pane (test + before/after screenshots)", "passes": false, "evidence": "" },
+        { "id": "M3-04", "text": "No dead taps across the 50 highest-degree passages (test)", "passes": false, "evidence": "" },
+        { "id": "M3-05", "text": "Tap targets >=44dp; labels legible at default font scale (screenshot judged)", "passes": false, "evidence": "" }
+      ]
+    },
+    {
+      "milestone": 4,
+      "name": "Translation layers",
+      "autonomy": "needs-human-check",
+      "criteria": [
+        { "id": "M4-01", "text": "Mocked parallel view aligns BSB/NIV verse-by-verse for Romans 8 (screenshot)", "passes": false, "evidence": "" },
+        { "id": "M4-02", "text": "Mocked NIV omitting Matt 17:21 renders footnote marker; tap reveals note (both screenshots)", "passes": false, "evidence": "" },
+        { "id": "M4-03", "text": "No API key configured -> BSB-only mode with plain explanation, no crash (screenshot)", "passes": false, "evidence": "" },
+        { "id": "M4-04", "text": "No live network call in any test or gate step (battery passes with network disabled)", "passes": false, "evidence": "" },
+        { "id": "M4-05", "text": "API key absent from repo and logs (grep proof in gate output)", "passes": false, "evidence": "" }
+      ]
+    },
+    {
+      "milestone": 5,
+      "name": "Shipping",
+      "autonomy": "needs-human-check",
+      "criteria": [
+        { "id": "M5-01", "text": "flutter build apk --release exits 0; human confirms install + launch on phone (HANDOFF record)", "passes": false, "evidence": "" },
+        { "id": "M5-02", "text": "Deployed URL loads reader with zero JS errors; capture asserts deployed origin", "passes": false, "evidence": "" },
+        { "id": "M5-03", "text": "Airplane-mode phone use reads BSB end-to-end (human-verified)", "passes": false, "evidence": "" },
+        { "id": "M5-04", "text": "About screen shows OpenBible CC-BY, BSB, and API.Bible attributions (screenshot)", "passes": false, "evidence": "" }
+      ]
+    }
+  ]
+}
