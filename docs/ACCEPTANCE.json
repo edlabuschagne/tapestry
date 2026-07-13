@@ -19,12 +19,12 @@
       "name": "The data forge",
       "autonomy": "auto-verifiable",
       "criteria": [
-        { "id": "M1-01", "text": "dart run tool/build_db.dart exits 0 and writes assets/bible.db", "passes": false, "evidence": "" },
-        { "id": "M1-02", "text": "DB contains 66 books and >= 31000 BSB verses (captured query output)", "passes": false, "evidence": "" },
-        { "id": "M1-03", "text": "John 3:16 query returns BSB text containing 'only begotten' or 'one and only'", "passes": false, "evidence": "" },
-        { "id": "M1-04", "text": "Every verse maps to exactly one passage; Isaiah 53:5 passage spans within Isa 52:13-53:12 with a heading", "passes": false, "evidence": "" },
-        { "id": "M1-05", "text": "Top-weighted edge from the Isaiah 53 passage points to a New Testament passage", "passes": false, "evidence": "" },
-        { "id": "M1-06", "text": "No orphan edges (asserted by test)", "passes": false, "evidence": "" }
+        { "id": "M1-01", "text": "dart run tool/build_db.dart exits 0 and writes assets/bible.db", "passes": true, "evidence": "verification-shots/M1/pipeline.txt — exit 0, wrote assets/bible.db (16MB)" },
+        { "id": "M1-02", "text": "DB contains 66 books and >= 31000 BSB verses (captured query output)", "passes": true, "evidence": "verification-shots/M1/db-query.txt — SELECT COUNT(*) FROM books = 66, FROM verses = 31086; test/tool/build_db_acceptance_test.dart M1-02" },
+        { "id": "M1-03", "text": "John 3:16 query returns BSB text containing 'only begotten' or 'one and only'", "passes": true, "evidence": "verification-shots/M1/db-query.txt — John 3:16 text contains 'one and only'; test/tool/build_db_acceptance_test.dart M1-03" },
+        { "id": "M1-04", "text": "Every verse maps to exactly one passage; Isaiah 53:5 passage spans within Isa 52:13-53:12 with a heading", "passes": true, "evidence": "verification-shots/M1/pipeline.txt — Isaiah 53:5 passage 'The Suffering Servant' spans Isaiah 53:1-53:8, within 52:13-53:12; test/tool/build_db_acceptance_test.dart M1-04 (also asserts every verse's passage_id resolves)" },
+        { "id": "M1-05", "text": "Top-weighted edge from the Isaiah 53 passage points to a New Testament passage", "passes": true, "evidence": "verification-shots/M1/pipeline.txt — top edge -> 1 Peter 2:21-2:25 'Christ's Example of Suffering', weight 714; test/tool/build_db_acceptance_test.dart M1-05" },
+        { "id": "M1-06", "text": "No orphan edges (asserted by test)", "passes": true, "evidence": "test/tool/build_db_acceptance_test.dart M1-06; also enforced at write time by tool/src/sqlite_writer.dart's _validate() (foreign-key existence check before the temp db is swapped in)" }
       ]
     },
     {

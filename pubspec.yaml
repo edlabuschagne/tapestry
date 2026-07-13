@@ -35,6 +35,12 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # tool/build_db.dart writes assets/bible.db with this (native SQLite bindings).
+  # Per ARCHITECTURE.md, drift itself (the app's runtime query layer) is a
+  # Milestone 2 concern — this is only the pipeline's raw writer, already implied
+  # by the decided "drift over a bundled prebuilt SQLite file" architecture.
+  sqlite3: ^2.4.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

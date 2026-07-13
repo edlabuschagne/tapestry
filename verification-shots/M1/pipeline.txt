@@ -1,0 +1,17 @@
+Tapestry data forge — building assets/bible.db
+Parsed BSB: 66 books, 31086 verses, 3083 passages
+Parsed cross-references: 344799 usable rows, 0 malformed rows rejected
+Built edges: 199464 passage-level edges (1 unresolved refs, 9254 self-edges, 2095 non-positive-weight pairs dropped)
+Wrote C:\Projects\Bible-App/assets/bible.db
+
+--- Smoke checks ---
+Books: 66 (expect 66)
+Verses: 31086 (expect >= 31000)
+John 3:16: "For God so loved the world that He gave His one and only Son, that everyone who believes in Him shall not perish but have eternal life."
+  contains "only begotten" or "one and only": true
+Isaiah 53:5 passage: "The Suffering Servant" (Isaiah 53:1-Isaiah 53:8)
+  within Isaiah 52:13-53:12: true; carries a heading: true
+Top-weighted edge from Isaiah 53 passage: -> "Christ’s Example of Suffering" (1 Peter 2:21-1 Peter 2:25), weight 714
+  points to New Testament passage: true
+No orphan edges: verified during write (validation would have failed otherwise)
+EXIT=0
