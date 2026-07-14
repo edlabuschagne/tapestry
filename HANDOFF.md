@@ -7,10 +7,29 @@
 Milestone 0 approved by the human (2026-07-13). Milestone 1 gated PASS-WITH-NOTES
 (2026-07-13), Milestone 2 gated PASS-WITH-NOTES (2026-07-14) and was batch-reviewed
 by the human, who cleared continuation into Milestone 3. Milestone 3 (The
-constellation) built with real evidence for all 5 criteria (2026-07-14); self-check
-and `/forge-verify` next. M3 is `needs-human-check` — stops for review regardless of
-its own gate verdict, per MILESTONES.md ("whether the constellation *feels* right is
-subjective quality a screenshot can't settle").
+constellation) gated PASS-WITH-NOTES (2026-07-14). Per its `needs-human-check` tag,
+**stopping here for human review** regardless of verdict — not proceeding to
+Milestone 4.
+
+## Gate result — Milestone 3, /forge-verify, 2026-07-14
+**Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). All 5 acceptance
+criteria verified against real behavioural evidence — the layout function's
+determinism proven both as a pure function and at the rendered-pixel level, the
+50-highest-degree no-dead-taps sweep run against real data, the recenter test proving
+the graph (not just a label) actually recentered. Checkpoint B honoured (layout
+function isolated and unit-tested before UI wiring). DO-NOT-BUILD clean, no tampering,
+no regression, no new debt.
+
+Two notes: (1) the debt ledger's cumulative count had drifted to 4 by double-counting
+an already-closed item — fixed below. (2) **Worth your specific attention given M3's
+subjective, needs-human-check nature:** in the Isaiah 53 constellation, one neighbour
+node is labeled "Isaiah 53" — identical to the center node's own label — because a
+second, distinct passage also happens to fall within Isaiah 53's chapter and
+`shortReference()` only resolves to book+chapter, not down to the specific passage.
+It's not a bug (different passage IDs, the tap correctly goes to the other passage),
+but it could visually read as confusing or redundant. Worth deciding whether that's
+fine as-is or needs a disambiguating label (e.g. appending part of the heading) before
+this ships further.
 
 ## Milestone 3 — what's built
 - `lib/domain/constellation.dart`: `layoutConstellation()` — a pure function, ordered
@@ -235,15 +254,12 @@ shared with the human in the session transcript. Summary:
   database, working around an unreproduced `flutter_test` pump-loop deadlock (see the
   RESOLVED section's note on `File.copy` async hangs). Flagged by the M2 Verifier as
   missing from this ledger in an earlier draft — added here now.
-- **Not a debt item, a note:** `docs/MILESTONES.md`'s M2 deliverables text promises
-  "verse numbers as anchors"; `lib/ui/reader_screen.dart` renders verse numbers as
-  bold/superscript labels but they aren't tappable/navigable anchors. None of M2's four
-  ACCEPTANCE.json criteria test this, so it doesn't block the gate (flagged by the
-  Verifier as a note, not a failure) — worth a decision before it's forgotten: build it
-  under a later milestone, or explicitly park it in docs/PARKED.md.
+~~Verse-number-anchors gap~~ **Closed, parked** — resolved to `docs/PARKED.md` (see M2
+loose-ends cleanup); no longer counted below.
 
-Cumulative: 4 open, all low severity. Well under the STOP threshold (8 open / 3
-medium).
+Cumulative: 3 open, all low severity. Well under the STOP threshold (8 open / 3
+medium). (M3's Verifier caught this count drifting to 4 in an earlier draft that
+double-counted a closed item — fixed.)
 
 ## Known issues
 - One OpenBible.info cross-reference row (Gen.22.10 -> Isa.53.6-Isa.53.12 chain
