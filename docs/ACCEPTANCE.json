@@ -32,10 +32,10 @@
       "name": "The reader",
       "autonomy": "auto-verifiable",
       "criteria": [
-        { "id": "M2-01", "text": "Isaiah 53 reachable in <=3 taps from launch; heading + full text shown (screenshot)", "passes": false, "evidence": "" },
-        { "id": "M2-02", "text": "Prev/next moves exactly one passage incl. Genesis-start and Malachi-end boundaries (test + screenshots)", "passes": false, "evidence": "" },
-        { "id": "M2-03", "text": "Airplane-mode Android launch renders a passage normally (screenshot)", "passes": false, "evidence": "" },
-        { "id": "M2-04", "text": "Web build renders the same passage in a browser (screenshot)", "passes": false, "evidence": "" }
+        { "id": "M2-01", "text": "Isaiah 53 reachable in <=3 taps from launch; heading + full text shown (screenshot)", "passes": true, "evidence": "verification-shots/M2/M2-01-isaiah-53.png (captured via integration_test/app_test.dart on Chrome — Home->Isaiah->53, 2 taps, shows 'The Suffering Servant' heading + full 8-verse text)" },
+        { "id": "M2-02", "text": "Prev/next moves exactly one passage incl. Genesis-start and Malachi-end boundaries (test + screenshots)", "passes": true, "evidence": "integration_test/app_test.dart + test/ui/reader_navigation_test.dart (both passing); verification-shots/M2/M2-02-genesis-start.png (Previous disabled) and M2-02-malachi-to-matthew.png (Next from Malachi's last passage lands exactly on Matthew's first, no skip/repeat)" },
+        { "id": "M2-03", "text": "Airplane-mode Android launch renders a passage normally (screenshot)", "passes": true, "evidence": "verification-shots/M2/M2-03-airplane-mode.png — Android emulator, airplane_mode_on=1 + wifi/data disabled (confirmed via failed adb shell ping and the status-bar airplane icon), app force-stopped and relaunched, Isaiah 53 passage renders fully" },
+        { "id": "M2-04", "text": "Web build renders the same passage in a browser (screenshot)", "passes": true, "evidence": "verification-shots/M2/M2-01-isaiah-53.png — same capture as M2-01, taken via a real Chrome browser (flutter drive -d chrome)" }
       ]
     },
     {
