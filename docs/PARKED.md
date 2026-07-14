@@ -16,3 +16,10 @@
 - iOS / desktop targets
 - Original-language layers (Strong's, morphology)
 - Audio Bible integration
+- Tappable/navigable verse-number anchors in the reader (e.g. deep-link or jump to a
+  specific verse within a passage) — M2's deliverables text mentioned "verse numbers
+  as anchors," but the reader currently renders them as plain bold labels, not
+  interactive anchors. No stated acceptance criterion tests this and nothing in the
+  app needs it yet (there's no verse-level linking or deep-linking feature to anchor
+  into). Revisit if a future milestone needs to jump to or reference a specific verse
+  rather than a whole passage.

@@ -6,12 +6,12 @@
 ## Current state
 Milestone 0 approved by the human (2026-07-13). Milestone 1 (The data forge) gated
 PASS-WITH-NOTES (2026-07-13) and Milestone 2 (The reader) gated PASS-WITH-NOTES
-(2026-07-14), both proceeding automatically per their `auto-verifiable` tag. Per
-MILESTONES.md's own suggested run boundary ("Run milestones 1-2, stop on any FAIL or
-tripwire, then stop for batch review") and the unusually large amount of
-troubleshooting M2 required, **stopping here for human review before starting
-Milestone 3** rather than proceeding automatically, even though M2's verdict alone
-would permit it.
+(2026-07-14). Batch-reviewed by the human after M2 (per MILESTONES.md's suggested
+"run 1-2, then batch review" boundary); cleared to continue. Two small M2 loose ends
+closed out: M0-03's debt item turned out to be moot (the placeholder it evidenced was
+legitimately replaced, not something to re-capture) and the verse-anchor deliverables
+gap was parked in docs/PARKED.md. Now starting Milestone 3 (The constellation), which
+is `needs-human-check` — stops for review regardless of its own gate verdict.
 
 ## Gate result — Milestone 2, /forge-verify, 2026-07-14
 **Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). All 4 acceptance
@@ -167,9 +167,16 @@ shared with the human in the session transcript. Summary:
   (same tier as `flutter_test`), not pub.dev packages needing separate approval.
 
 ## Debt ledger (forge-debt)
-- **[low]** M0-03 screenshot still uses the ad hoc static-serve + Playwright method,
-  not the real `integration_test` harness — M2 proved the harness works (on web; see
-  RESOLVED section), so re-capturing M0-03 the same way is now easy, just not yet done.
+- ~~M0-03 screenshot via ad hoc method~~ **Closed, not re-captured — on reflection,
+  there's nothing to re-capture.** M0-03's criterion was specifically about the
+  bootstrap *placeholder* screen, which M2 legitimately replaced with the real
+  HomeScreen (book list) — that's the intended evolution M1/M2's deliverables called
+  for, not a regression. The placeholder no longer exists to screenshot through any
+  harness. The original ad hoc capture (`verification-shots/M0/M0-03-launch.png`) is
+  an accurate historical record of what was true when M0 gated and was approved; M0
+  is closed and its evidence isn't revisited. Re-screenshotting today's HomeScreen
+  wouldn't be "M0-03 done properly," it would be evidence for a different (and
+  already-satisfied) criterion. No action needed.
 - **[low]** `tool/src/cross_ref_source.dart` (`_resolveVerseRefStart`) — a cross-
   reference range (e.g. `Prov.8.22-Prov.8.30`) resolves to its start verse's passage
   only, not every passage the range touches. Ranges rarely cross a BSB passage
@@ -293,13 +300,13 @@ scenario in `integration_test/app_test.dart` (covered elsewhere, not missing evi
   render) is satisfied by the same `M2-01-isaiah-53.png` — it was captured via Chrome.
 
 ## Next steps
-1. Self-check `docs/ACCEPTANCE.json` for M2 and run `/forge-verify`.
-2. M0-03's debt item (ad hoc Playwright screenshot instead of `integration_test`) is
-   now moot in spirit — this milestone proved the real harness works on web; if it's
-   worth the small effort, M0-03 could be re-captured the same way M2's web shots were,
-   but it's not blocking anything.
-3. The Android `flutter drive` connection issue remains unresolved and undiagnosed —
-   worth a fresh look before M3 (which will want on-device screenshots for the
-   constellation view too), maybe with a different AVD API level or a Flutter/package
-   upgrade, but not urgent since M2-03's evidence was obtained directly via `adb`
-   regardless.
+1. Build Milestone 3 (The constellation): `ConstellationView` (`CustomPainter`, center
+   passage + up to 12 top-weighted neighbours on a deterministic radial orbit, edge
+   thickness ∝ weight), tap-to-recenter with the reader pane following, entry point
+   from ReaderScreen. `needs-human-check` — stops for review regardless of gate
+   verdict. DO-NOT-BUILD: force-directed layout, whole-Bible view, pan/zoom physics,
+   animation beyond simple transitions.
+2. The Android `flutter drive` connection issue remains unresolved and undiagnosed —
+   worth a fresh look before M3's own on-device screenshots are needed, maybe with a
+   different AVD API level or a Flutter/package upgrade. Not urgent — direct `adb`
+   control is a proven fallback.
