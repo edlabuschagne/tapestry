@@ -50,7 +50,7 @@ void main() {
         reason: 'expected at least one Gospel (Matthew-John) passage among the neighbours',
       );
 
-      await tester.pumpWidget(TapestryApp(store: store));
+      await tester.pumpWidget(TapestryApp(store: store, translationService: null));
       await tester.pumpAndSettle();
 
       await _tapAfterScrollingIntoView(tester, find.text('Isaiah'));

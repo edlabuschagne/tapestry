@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:tapestry/data/local_store.dart';
+import 'package:tapestry/data/translation_service.dart';
+import 'package:tapestry/domain/verse_id.dart';
 import 'package:tapestry/ui/constellation_screen.dart';
+import 'package:tapestry/ui/parallel_screen.dart';
 import 'package:tapestry/ui/passage_body.dart';
 
 class ReaderScreen extends StatefulWidget {
   final LocalStore store;
+  final TranslationService? translationService;
   final int passageId;
 
-  const ReaderScreen({super.key, required this.store, required this.passageId});
+  const ReaderScreen({
+    super.key,
+    required this.store,
+    required this.translationService,
+    required this.passageId,
+  });
 
   @override
   State<ReaderScreen> createState() => _ReaderScreenState();
@@ -57,6 +66,28 @@ class _ReaderScreenState extends State<ReaderScreen> {
           onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
         actions: [
+          FutureBuilder<_PassageContent>(
+            future: _future,
+            builder: (context, snapshot) {
+              final passage = snapshot.data?.passage;
+              return IconButton(
+                icon: const Icon(Icons.compare_arrows),
+                tooltip: 'Parallel',
+                onPressed: passage == null
+                    ? null
+                    : () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ParallelScreen(
+                              store: widget.store,
+                              translationService: widget.translationService,
+                              book: passage.book,
+                              chapter: decodeVerseId(passage.startVerseId).chapter,
+                            ),
+                          ),
+                        ),
+              );
+            },
+          ),
           FutureBuilder<_PassageContent>(
             future: _future,
             builder: (context, snapshot) {

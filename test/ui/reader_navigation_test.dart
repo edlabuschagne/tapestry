@@ -38,7 +38,7 @@ void main() {
       }
       final lastOverall = await store.passageById(maxId);
 
-      await tester.pumpWidget(TapestryApp(store: store));
+      await tester.pumpWidget(TapestryApp(store: store, translationService: null));
       await tester.pumpAndSettle();
 
       // --- Genesis 1 start: no Previous ---

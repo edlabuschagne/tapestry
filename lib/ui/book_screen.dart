@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:tapestry/data/local_store.dart';
+import 'package:tapestry/data/translation_service.dart';
 import 'package:tapestry/domain/book_index.dart';
 import 'package:tapestry/domain/verse_id.dart';
 import 'package:tapestry/ui/reader_screen.dart';
 
 class BookScreen extends StatelessWidget {
   final LocalStore store;
+  final TranslationService? translationService;
   final BookInfo book;
 
-  const BookScreen({super.key, required this.store, required this.book});
+  const BookScreen({
+    super.key,
+    required this.store,
+    required this.translationService,
+    required this.book,
+  });
 
   Future<void> _openChapter(BuildContext context, int chapter) async {
     final verseId = encodeVerseId(book: book.order, chapter: chapter, verse: 1);
@@ -16,7 +23,11 @@ class BookScreen extends StatelessWidget {
     if (!context.mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ReaderScreen(store: store, passageId: passage.id),
+        builder: (_) => ReaderScreen(
+          store: store,
+          translationService: translationService,
+          passageId: passage.id,
+        ),
       ),
     );
   }

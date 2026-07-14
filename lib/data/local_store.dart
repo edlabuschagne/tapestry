@@ -105,6 +105,16 @@ class LocalStore extends _$LocalStore {
       .map((row) => row.read(verses.chapter.max())!)
       .getSingle();
 
+  /// All verses in a single chapter, regardless of which BSB passage(s) they
+  /// fall in — translation alignment (M4) is inherently chapter/verse based
+  /// (the coordinate system every translation shares), unlike BSB's own
+  /// heading-derived passage boundaries, which other translations don't
+  /// share and which can split a chapter across several passages.
+  Future<List<Verse>> versesForChapter(int book, int chapter) => (select(verses)
+        ..where((v) => v.book.equals(book) & v.chapter.equals(chapter))
+        ..orderBy([(v) => OrderingTerm.asc(v.verse)]))
+      .get();
+
   /// Passage ids are assigned sequentially in canonical reading order by the
   /// pipeline (Genesis 1 = id 1 ... Revelation 22 = the highest id), so
   /// prev/next is just id-1 / id+1 with a bounds check — no query needed to

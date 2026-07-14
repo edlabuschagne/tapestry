@@ -51,6 +51,11 @@ dependencies:
   path_provider: ^2.1.5
   path: ^1.9.1
 
+  # M4's TranslationService (API.Bible client). dart:io's HttpClient doesn't
+  # work on Flutter web at all, and there's no stdlib alternative that does —
+  # this is the standard, Flutter-team-recommended cross-platform HTTP client.
+  http: ^1.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

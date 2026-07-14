@@ -34,7 +34,7 @@ void main() {
     final store = await openLocalStore();
     addTearDown(store.close);
 
-    await tester.pumpWidget(TapestryApp(store: store));
+    await tester.pumpWidget(TapestryApp(store: store, translationService: null));
     await tester.pumpAndSettle();
 
     // Tap 1: open Isaiah from the book list.
@@ -80,7 +80,7 @@ void main() {
         if (p.book != malachi.order) break; // stop one passage into Matthew
       }
 
-      await tester.pumpWidget(TapestryApp(store: store));
+      await tester.pumpWidget(TapestryApp(store: store, translationService: null));
       await tester.pumpAndSettle();
 
       // --- Genesis 1 start: no Previous ---

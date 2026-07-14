@@ -10,7 +10,7 @@ void main() {
     final store = await openTestStore();
     addTearDown(store.close);
 
-    await tester.pumpWidget(TapestryApp(store: store));
+    await tester.pumpWidget(TapestryApp(store: store, translationService: null));
     await tester.pumpAndSettle();
 
     expect(find.text('Tapestry'), findsOneWidget);
