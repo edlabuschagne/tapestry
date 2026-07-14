@@ -6,10 +6,10 @@ import 'package:tapestry/domain/book_index.dart';
 import 'package:tapestry/domain/verse_id.dart';
 import 'package:tapestry/domain/verse_status.dart';
 
-/// Real API.Bible client. Never constructed or called by any test or gate
-/// step (docs/MILESTONES.md M4-04) — its wire-format parsing is necessarily
-/// unverified by automation and is checked by the human against the live
-/// API when they enter their own key at M4's needs-human-check stop.
+/// Real API.Bible client. Never calls the live service in any test or gate
+/// step (docs/MILESTONES.md M4-04) — `_splitIntoVerses`'s parsing is tested
+/// via an injected mock http.Client shaped like the real response captured
+/// during the human's live-key verification, not a live call.
 class ApiBibleTranslationService implements TranslationService {
   static const _baseUrl = 'https://api.scripture.api.bible/v1';
 
@@ -76,21 +76,25 @@ class ApiBibleTranslationService implements TranslationService {
     };
   }
 
-  // forge-debt: splits chapter content of the form "1 In the beginning...2
-  // Now the earth..." into verse number -> text, assuming each verse starts
-  // with its number followed by whitespace (true for
-  // content-type=text&include-verse-numbers=true at the time this was
-  // written). Approximate by necessity — no test or gate step may call the
-  // live API to confirm the exact wire format (M4-04); sanity-check this
-  // against real output during the human's live-key verification.
+  // Splits chapter content of the form "...[1] In the beginning...[2] Now
+  // the earth..." into verse number -> text. Confirmed against a real
+  // content-type=text&include-verse-numbers=true response during the
+  // human's live-key verification (docs/MILESTONES.md M4,
+  // needs-human-check) — verse numbers are wrapped in square brackets, not
+  // a bare number followed by whitespace as first assumed. Internal
+  // whitespace (the response has line breaks for poetic formatting) is
+  // collapsed to single spaces, matching how BSB verses are already stored.
   Map<int, String> _splitIntoVerses(String content) {
-    final matches = RegExp(r'(?:^|\s)(\d{1,3})\s').allMatches(content).toList();
+    final matches = RegExp(r'\[(\d{1,3})\]').allMatches(content).toList();
     final result = <int, String>{};
     for (var i = 0; i < matches.length; i++) {
       final verseNum = int.parse(matches[i].group(1)!);
       final start = matches[i].end;
       final end = i + 1 < matches.length ? matches[i + 1].start : content.length;
-      result[verseNum] = content.substring(start, end).trim();
+      result[verseNum] = content
+          .substring(start, end)
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
     }
     return result;
   }

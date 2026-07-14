@@ -28,6 +28,23 @@ build web exit 0). Not independently re-gated by the Verifier — this is a smal
 additive, well-tested change on top of an already-PASSed milestone, not a new
 milestone; flag if you'd like a formal re-gate anyway.
 
+**Human-verification bug found and fixed (2026-07-14):** the human's first live-key
+test showed every single verse in the Parallel view falling back to "This verse does
+not appear in this translation" — for both NIV and NKJV. Root cause confirmed by
+having the human run a one-off diagnostic PowerShell script against the real
+API.Bible endpoint (their key never left their terminal/pasted to the agent — only
+the response body was shared): the real `content-type=text` response wraps verse
+numbers in square brackets (`[1] In the beginning...`), not a bare number followed by
+whitespace as `_splitIntoVerses` had guessed (the exact uncertainty its `forge-debt`
+marker flagged). Fixed the regex (`lib/data/api_bible_translation_service.dart`) and
+closed the debt item for real: added `test/data/api_bible_translation_service_test.dart`,
+which injects a `MockClient` (via `package:http/testing.dart`) returning content
+shaped exactly like the captured real response — verse-bracket parsing and
+poetic-line-break whitespace collapsing are now both regression-tested, still with
+zero live network calls (M4-04 intact). Full battery re-run clean (44/44 tests). The
+human needs to re-run the app with their key once more to confirm the fix actually
+works end-to-end — not yet confirmed as of this note.
+
 ## Ahead-of-schedule: repo made public + GitHub Pages deploy workflow (2026-07-14)
 At the human's explicit request (wants to share the app with a few people for
 feedback), not part of any milestone's build:
