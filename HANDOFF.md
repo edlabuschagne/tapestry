@@ -5,11 +5,31 @@
 
 ## Current state
 Milestone 0 approved by the human (2026-07-13). Milestone 1 gated PASS-WITH-NOTES
-(2026-07-13), Milestone 2 gated PASS-WITH-NOTES (2026-07-14) and was batch-reviewed
-by the human, who cleared continuation into Milestone 3. Milestone 3 (The
-constellation) gated PASS-WITH-NOTES (2026-07-14). Per its `needs-human-check` tag,
-**stopping here for human review** regardless of verdict — not proceeding to
-Milestone 4.
+(2026-07-13), Milestone 2 gated PASS-WITH-NOTES (2026-07-14) and was batch-reviewed.
+Milestone 3 gated PASS-WITH-NOTES (2026-07-14), reviewed and approved by the human —
+cleared to continue into Milestone 4 (the duplicate "Isaiah 53" node label was
+accepted as-is, not worth a fix right now).
+
+## Ahead-of-schedule: repo made public + GitHub Pages deploy workflow (2026-07-14)
+At the human's explicit request (wants to share the app with a few people for
+feedback), not part of any milestone's build:
+- **Repo visibility changed to public** (`gh repo edit --visibility public`) — human
+  explicitly approved after being told the tradeoff (GitHub Pages needs either a
+  public repo or a paid plan; no custom domain needed either way).
+- **`.github/workflows/deploy-pages.yml` added** — builds the web app
+  (`flutter build web --base-href /tapestry/`) and deploys to GitHub Pages via the
+  official `actions/deploy-pages` action, triggered on every push to `main` or
+  manually. This is exactly the "workflow preps it" half of Milestone 5's own deploy
+  deliverable — deliberately NOT doing the rest of M5 (release APK signing, About
+  screen attributions, etc.), just this one piece, now, because it was asked for
+  directly.
+- **Still needs the human to flip Pages on**: repo Settings -> Pages -> Build and
+  deployment -> Source: "GitHub Actions". The workflow will fail until that's done
+  (Pages has to exist before `deploy-pages` can publish to it); once enabled, either
+  wait for the next push or manually re-run the workflow.
+- This does NOT count as Milestone 5 being started or completed — M5's own gate still
+  covers the full deploy criteria (release build, About screen, deployed-URL capture
+  with a JS-error listener) when its turn comes.
 
 ## Gate result — Milestone 3, /forge-verify, 2026-07-14
 **Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). All 5 acceptance
