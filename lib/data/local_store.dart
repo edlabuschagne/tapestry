@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:tapestry/domain/constellation.dart';
 
 part 'local_store.g.dart';
 
@@ -112,4 +113,40 @@ class LocalStore extends _$LocalStore {
       (selectOnly(passages)..addColumns([passages.id.max()]))
           .map((row) => row.read(passages.id.max())!)
           .getSingle();
+
+  /// Up to [limit] neighbours of [passageId], strongest edge first, ties
+  /// broken by neighbour passage id — a fully deterministic order, which is
+  /// what makes the constellation's layout reproducible (see
+  /// lib/domain/constellation.dart). Edges are stored undirected (as
+  /// (fromPassageId, toPassageId) with fromPassageId < toPassageId), so
+  /// "the neighbour" is whichever end of the edge isn't [passageId].
+  Future<List<NeighbourEdge>> topNeighbours(int passageId, {int limit = 12}) async {
+    final rows = await customSelect(
+      'SELECT CASE WHEN from_passage_id = :id THEN to_passage_id ELSE from_passage_id END AS neighbour_id, '
+      'weight FROM edges WHERE from_passage_id = :id OR to_passage_id = :id '
+      'ORDER BY weight DESC, neighbour_id ASC LIMIT :limit',
+      variables: [Variable.withInt(passageId), Variable.withInt(limit)],
+      readsFrom: {edges},
+    ).get();
+    return [
+      for (final row in rows)
+        NeighbourEdge(passageId: row.read<int>('neighbour_id'), weight: row.read<int>('weight')),
+    ];
+  }
+
+  /// The [limit] passages with the most edges touching them (in either
+  /// direction) — used to sweep "no dead taps" across the graph's most
+  /// heavily-linked passages (M3-04) rather than the whole Bible.
+  Future<List<int>> highestDegreePassageIds(int limit) async {
+    final rows = await customSelect(
+      'SELECT passage_id, COUNT(*) AS degree FROM ('
+      '  SELECT from_passage_id AS passage_id FROM edges '
+      '  UNION ALL '
+      '  SELECT to_passage_id AS passage_id FROM edges'
+      ') GROUP BY passage_id ORDER BY degree DESC, passage_id ASC LIMIT :limit',
+      variables: [Variable.withInt(limit)],
+      readsFrom: {edges},
+    ).get();
+    return [for (final row in rows) row.read<int>('passage_id')];
+  }
 }

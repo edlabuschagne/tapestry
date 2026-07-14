@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tapestry/data/local_store.dart';
-import 'package:tapestry/domain/book_index.dart';
+import 'package:tapestry/ui/constellation_screen.dart';
+import 'package:tapestry/ui/passage_body.dart';
 
 class ReaderScreen extends StatefulWidget {
   final LocalStore store;
@@ -55,6 +56,26 @@ class _ReaderScreenState extends State<ReaderScreen> {
           tooltip: 'Books',
           onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
+        actions: [
+          FutureBuilder<_PassageContent>(
+            future: _future,
+            builder: (context, snapshot) {
+              final passageId = snapshot.data?.passage.id;
+              return IconButton(
+                icon: const Icon(Icons.hub_outlined),
+                tooltip: 'Constellation',
+                onPressed: passageId == null
+                    ? null
+                    : () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ConstellationScreen(store: widget.store, passageId: passageId),
+                          ),
+                        ),
+              );
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<_PassageContent>(
         future: _future,
@@ -63,46 +84,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           final content = snapshot.data!;
-          final book = booksByOrder[content.passage.book]!;
           final canGoPrev = content.passage.id > 1;
           final canGoNext = content.passage.id < content.maxPassageId;
 
           return Column(
             children: [
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    Text(
-                      book.name,
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                    Text(
-                      content.passage.heading,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 12),
-                    for (final verse in content.verses)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: '${verse.verse} ',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontFeatures: [FontFeature.superscripts()],
-                                ),
-                              ),
-                              TextSpan(text: verse.content),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+              Expanded(child: PassageBody(passage: content.passage, verses: content.verses)),
               SafeArea(
                 top: false,
                 child: Row(
