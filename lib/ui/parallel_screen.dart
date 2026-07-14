@@ -181,30 +181,40 @@ class _OtherVerseLine extends StatelessWidget {
     final note = status is VerseFootnoted
         ? (status! as VerseFootnoted).note
         : 'This verse does not appear in this translation.';
-    return InkWell(
-      onTap: () => showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('$abbreviation $verseNumber'),
-          content: Text(note),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
-          ],
+    // Fixed-height tap area, not just the inline text glyphs: the text
+    // alone (~20 logical px tall) falls well under the project's 44dp
+    // accessibility floor (see kNodeRadius in constellation_view.dart for
+    // the equivalent floor on the graph's own tap targets).
+    return SizedBox(
+      height: 44,
+      child: InkWell(
+        onTap: () => showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('$abbreviation $verseNumber'),
+            content: Text(note),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+            ],
+          ),
         ),
-      ),
-      child: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(text: '$abbreviation  '),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text.rich(
             TextSpan(
-              text: '[footnote]',
-              style: TextStyle(
-                fontStyle: FontStyle.italic,
-                decoration: TextDecoration.underline,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              children: [
+                TextSpan(text: '$abbreviation  '),
+                TextSpan(
+                  text: '[footnote]',
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    decoration: TextDecoration.underline,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
