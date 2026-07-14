@@ -43,11 +43,11 @@
       "name": "The constellation",
       "autonomy": "needs-human-check",
       "criteria": [
-        { "id": "M3-01", "text": "Isaiah 53 constellation shows >=5 neighbours incl. at least one Gospel passage (screenshot)", "passes": false, "evidence": "" },
-        { "id": "M3-02", "text": "Layout deterministic: identical screenshots across two runs (golden test)", "passes": false, "evidence": "" },
-        { "id": "M3-03", "text": "Tapping a neighbour recenters graph AND updates reader pane (test + before/after screenshots)", "passes": false, "evidence": "" },
-        { "id": "M3-04", "text": "No dead taps across the 50 highest-degree passages (test)", "passes": false, "evidence": "" },
-        { "id": "M3-05", "text": "Tap targets >=44dp; labels legible at default font scale (screenshot judged)", "passes": false, "evidence": "" }
+        { "id": "M3-01", "text": "Isaiah 53 constellation shows >=5 neighbours incl. at least one Gospel passage (screenshot)", "passes": true, "evidence": "verification-shots/M3/M3-01-isaiah-53-constellation.png (12 neighbours incl. Matthew 8, Matthew 20, John 1, John 12); data-asserted in integration_test/constellation_test.dart (neighbourEdges.length >= 5, book in 40..43)" },
+        { "id": "M3-02", "text": "Layout deterministic: identical screenshots across two runs (golden test)", "passes": true, "evidence": "test/ui/constellation_golden_test.dart — renders the widget twice from identical input, asserts pixel-identical PNG bytes; test/domain/constellation_test.dart asserts the underlying layout function's determinism" },
+        { "id": "M3-03", "text": "Tapping a neighbour recenters graph AND updates reader pane (test + before/after screenshots)", "passes": true, "evidence": "test/ui/constellation_recenter_test.dart (widget test, asserts reader pane text change + a second tap at the same coordinate lands on a different passage, proving the graph itself recentered); verification-shots/M3/M3-01-isaiah-53-constellation.png (before) and M3-03-after-recenter.png (after, centered on 1 Peter 2)" },
+        { "id": "M3-04", "text": "No dead taps across the 50 highest-degree passages (test)", "passes": true, "evidence": "test/ui/constellation_no_dead_taps_test.dart — sweeps all neighbours of the 50 highest-degree passages against the real built assets/bible.db, asserts every one resolves to a passage with a heading and verse text" },
+        { "id": "M3-05", "text": "Tap targets >=44dp; labels legible at default font scale (screenshot judged)", "passes": true, "evidence": "verification-shots/M3/M3-05-tap-targets-and-labels.png; lib/ui/constellation_view.dart kNodeRadius=26 (52dp diameter, exceeds the 44dp floor), kCenterNodeRadius=34 (68dp)" }
       ]
     },
     {

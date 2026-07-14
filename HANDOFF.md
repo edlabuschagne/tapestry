@@ -4,14 +4,55 @@
 > This file holds judgment: what's built, decisions and why, known issues, next steps.
 
 ## Current state
-Milestone 0 approved by the human (2026-07-13). Milestone 1 (The data forge) gated
-PASS-WITH-NOTES (2026-07-13) and Milestone 2 (The reader) gated PASS-WITH-NOTES
-(2026-07-14). Batch-reviewed by the human after M2 (per MILESTONES.md's suggested
-"run 1-2, then batch review" boundary); cleared to continue. Two small M2 loose ends
-closed out: M0-03's debt item turned out to be moot (the placeholder it evidenced was
-legitimately replaced, not something to re-capture) and the verse-anchor deliverables
-gap was parked in docs/PARKED.md. Now starting Milestone 3 (The constellation), which
-is `needs-human-check` — stops for review regardless of its own gate verdict.
+Milestone 0 approved by the human (2026-07-13). Milestone 1 gated PASS-WITH-NOTES
+(2026-07-13), Milestone 2 gated PASS-WITH-NOTES (2026-07-14) and was batch-reviewed
+by the human, who cleared continuation into Milestone 3. Milestone 3 (The
+constellation) built with real evidence for all 5 criteria (2026-07-14); self-check
+and `/forge-verify` next. M3 is `needs-human-check` — stops for review regardless of
+its own gate verdict, per MILESTONES.md ("whether the constellation *feels* right is
+subjective quality a screenshot can't settle").
+
+## Milestone 3 — what's built
+- `lib/domain/constellation.dart`: `layoutConstellation()` — a pure function, ordered
+  `NeighbourEdge` list in, node angles out, evenly spaced starting at 12 o'clock.
+  Verified in isolation (unit tests) *before* any UI wiring, per VERIFICATION.md's
+  Checkpoint B for M3.
+- `lib/data/local_store.dart`: `topNeighbours()` (up to 12, weight desc / neighbour-id
+  asc tie-break — the order that makes the layout reproducible) and
+  `highestDegreePassageIds()` (for the M3-04 sweep), both raw SQL via `customSelect`
+  since drift's fluent builder can't express the "either end of an undirected edge"
+  CASE WHEN cleanly.
+- `lib/domain/short_reference.dart`: node labels ("Isaiah 53", or "Isaiah 52-53" for a
+  multi-chapter passage). Takes raw `book`/`startVerseId`/`endVerseId` fields rather
+  than a `Passage` object — there are two distinct `Passage` types in this codebase
+  (the pipeline's own in `lib/domain/passage.dart`, and drift's auto-generated one
+  from the `Passages` table, used everywhere at runtime) and a single function that
+  works with either sidesteps the collision entirely.
+- `lib/ui/constellation_view.dart` (`CustomPainter`) + `lib/ui/constellation_screen.dart`
+  (graph + reader pane, tap-to-recenter, entry point from ReaderScreen's app bar).
+  `lib/ui/passage_body.dart` extracted from ReaderScreen so both screens render a
+  passage identically.
+- **Found and fixed during manual smoke-testing, before writing formal tests:**
+  labels were originally centered inside each node, which clipped longer references
+  like "Revelation" (rendered as "evelation") — moved neighbour labels outside the
+  node (radially outward, single line, ellipsis) and kept the center's label inside
+  its larger circle (avoiding both the clipping and a center/neighbour label collision
+  at the 6 o'clock position, which occurs for any fixed direction whenever there are
+  exactly 12 evenly-spaced neighbours, since 12 is divisible by 4).
+- Real data: Isaiah 53's constellation surfaces 12 neighbours including Matthew, John,
+  and Acts passages; tapping "1 Peter 2" recenters the graph onto it and the reader
+  pane updates to 1 Peter 2:21-25, with Isaiah 53 now appearing as 1 Peter 2's own
+  neighbour (confirming the undirected-edge design from M1).
+- Tests: `test/domain/constellation_test.dart` (pure layout function), `test/ui/
+  constellation_golden_test.dart` (M3-02 — renders the widget twice from identical
+  input, asserts pixel-identical PNG bytes; needed `tester.runAsync` around
+  `toImage()`/`toByteData()`, another flutter_test/real-async-work interaction like
+  the M2 `File.copy` one), `test/ui/constellation_no_dead_taps_test.dart` (M3-04, real
+  data), `test/ui/constellation_recenter_test.dart` (M3-03).
+- Fixed a real bug in `test_driver/integration_test.dart`: it hardcoded
+  `verification-shots/M2/` as the screenshot output folder (copied from the M2 work
+  without generalizing) — now derives the milestone from the screenshot name's own
+  prefix, so it works for any milestone's screenshots.
 
 ## Gate result — Milestone 2, /forge-verify, 2026-07-14
 **Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). All 4 acceptance
