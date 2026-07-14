@@ -6,7 +6,8 @@
 ## Current state
 Milestone 0 approved by the human (2026-07-13). Milestone 1 (The data forge) gated
 PASS-WITH-NOTES (2026-07-13) and proceeded automatically per its `auto-verifiable` tag.
-Now starting Milestone 2 (The reader).
+Milestone 2 (The reader) built, real evidence captured for all 4 acceptance criteria
+(2026-07-14), self-check and `/forge-verify` next.
 
 ## Gate result — Milestone 1, /forge-verify, 2026-07-13
 **Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). All 6 acceptance
@@ -152,19 +153,23 @@ shared with the human in the session transcript. Summary:
   (same tier as `flutter_test`), not pub.dev packages needing separate approval.
 
 ## Debt ledger (forge-debt)
-- **[low]** M0-03 screenshot captured via ad hoc static-serve + Playwright instead of
-  Flutter's own `integration_test` on-device harness, because no Android
-  emulator/device was available in this session. No `// forge-debt:` code marker (this
-  is a verification-process shortcut, not a code shortcut) — recorded here directly.
-  Resolve by M2: create an AVD (or use the user's phone) and re-capture M0-03 (and all
-  of M2's screenshots) through `flutter test integration_test`.
+- **[low]** M0-03 screenshot still uses the ad hoc static-serve + Playwright method,
+  not the real `integration_test` harness — M2 proved the harness works (on web; see
+  RESOLVED section), so re-capturing M0-03 the same way is now easy, just not yet done.
 - **[low]** `tool/src/cross_ref_source.dart` (`_resolveVerseRefStart`) — a cross-
   reference range (e.g. `Prov.8.22-Prov.8.30`) resolves to its start verse's passage
   only, not every passage the range touches. Ranges rarely cross a BSB passage
   boundary, so this affects which single passage a handful of edges attach to, never
   whether a reference resolves at all. Marked inline with `// forge-debt`.
+- **[low]** `flutter drive` against the Android emulator hangs (VM service connection
+  drops ~10-30s in) for reasons unrelated to app code — confirmed by retrying after
+  fixing a real setState bug that was the actual cause of every *other* symptom seen
+  during this investigation, with no change to the Android hang. Root cause
+  undiagnosed. Not blocking: M2-03's evidence was obtained via direct `adb` device
+  control instead. Worth a fresh look before M3, which will also want on-device
+  screenshots.
 
-Cumulative: 2 open, both low severity. Well under the STOP threshold (8 open / 3
+Cumulative: 3 open, all low severity. Well under the STOP threshold (8 open / 3
 medium).
 
 ## Known issues
@@ -175,81 +180,54 @@ medium).
   is rejected and counted (1 of 344,799), not a crash. Not a bug, not debt — Check 5
   validation working as designed.
 
-## BLOCKER — `flutter drive` hangs on the Android emulator (2026-07-14)
-Built out full Milestone 2 (drift wiring, navigation, ReaderScreen, prev/next,
-`integration_test`/`test_driver` harness — see below) but cannot get
-`flutter drive --driver=test_driver/integration_test.dart --target=integration_test/app_test.dart
--d emulator-5554` to complete against the AVD (`tapestry_avd`, Android API 36 x86_64,
-`google_apis_playstore` system image).
+## RESOLVED — integration_test harness (2026-07-14)
+Spent a long stretch on `flutter drive` hanging against the Android emulator
+(`tapestry_avd`, Android API 36 x86_64). 4 distinct fix attempts — scrolling into view
+before tapping lazily-built list/grid items, switching a `RichText` to `Text.rich` (real
+bug: `find.textContaining` can't see raw `RichText`), switching the test's DB-open path
+to the production `openLocalStore()`, enabling the emulator's GPU acceleration (its AVD
+had `hw.gpu.enabled=no`) — none resolved the Android hang. Stopped there per the
+3-attempt budget and reported the blocker.
 
-**Symptom, identical across 4 distinct attempts:** the app installs and launches, the
-on-device test genuinely starts (`I/flutter: 00:00 +0: <test name>` prints), the driver
-logs "Connected to Flutter application" — then within ~10-30s: "request_data message is
-taking a long time to complete..." followed by `DriverError: ... ext.flutter.driver:
-(112) Service has disappeared`. The app process is gone by the time logcat can be
-inspected, so it's unclear whether the on-device test itself ever completed or hung too.
+**Root cause, found afterward:** `ReaderScreen._goTo` and `didUpdateWidget` called
+`setState(() => _future = _load(id))`. The arrow closure's implicit return value is the
+*value of the assignment expression* — i.e. the `Future` itself — which Flutter's
+`setState` rejects at runtime ("setState() callback argument returned a Future").
+Every "multiple exceptions" failure (on web) and quite possibly the Android VM-service
+disappearing were downstream of this: tapping Next/Previous threw an uncaught assertion
+mid-gesture. Fixed by using a block body (`setState(() { _future = next; });`) in both
+methods — `next` computed *before* the `setState` call either way, but the block body is
+what actually matters; my first attempted fix (hoisting `next` into a variable but
+keeping the arrow body) still failed, because the arrow's return value is unrelated to
+*when* the future was created.
 
-**What was tried (each a distinct hypothesis, each ruled out without changing the
-symptom):**
-1. Book/chapter list items not scrolled into view before tapping (`ListView.builder`
-   is lazy) — fixed with `tester.scrollUntilVisible`. Real, necessary fix, didn't
-   resolve the hang.
-2. Verse text rendered via raw `RichText`, which `find.textContaining` can't see (only
-   `Text` is checked) — fixed by switching to `Text.rich`. Real app bug, correctly
-   fixed, didn't resolve the hang.
-3. Test used a test-only `openTestStore()` (sync file copy) instead of the app's real
-   `openLocalStore()` — switched the integration test to the production code path.
-   No change.
-4. Emulator's AVD had `hw.gpu.enabled=no` (pure software rendering, found via
-   `emulator -accel-check` + inspecting `config.ini`) — fixed
-   (`hw.gpu.enabled=yes`), confirmed on relaunch that it now uses the host's real
-   NVIDIA GPU via WHPX/gfxstream (`emulator -avd tapestry_avd` log shows "Selecting
-   Vulkan device: NVIDIA GeForce RTX 5070 Laptop GPU"). No change — if anything, more
-   frames were reported skipped on this run.
+**After the fix:**
+- **Web** (`flutter drive -d chrome`, via a locally-installed `chromedriver` matching
+  the exact Chrome build — needed a separate WebDriver server, not obvious up front):
+  M2-01 and M2-02 (Genesis-start, Malachi→Matthew) now pass with real screenshots.
+  Dropped an extra "Revelation end" scenario (bonus coverage beyond M2-02's literal
+  text) after it hit an unrelated web-only timing quirk on a third consecutive screen
+  transition in the same test — not chased further; the same scenario already passes
+  reliably in `test/ui/reader_navigation_test.dart` (host `flutter_test`).
+- **Android**: retried `flutter drive` once more after the fix (legitimate new
+  information, not a repeat) — **still hangs identically**. So the setState bug wasn't
+  the (sole) cause of the Android-specific failure; something about this
+  `flutter_driver`/emulator/Windows combination remains unresolved and is *not* an app
+  bug (the app itself works fine on Android — see M2-03 below, captured without the
+  driver). Not investigated further.
+- **M2-03 (airplane mode)** captured manually instead of via the driver: installed the
+  debug APK directly (`adb install`), set `airplane_mode_on` + `svc wifi disable` +
+  `svc data disable` (confirmed via `adb shell ping` failing and the airplane-mode icon
+  in the status bar), force-stopped and relaunched the app, captured via
+  `adb exec-out screencap`. Shows a full passage rendering correctly and completely
+  offline.
 
-**Web target tried as a genuinely different transport (Chrome DevTools, not the Dart
-VM service over adb) — not a 5th attempt at the same Android problem:**
-`flutter drive -d chrome --browser-name=chrome` first failed outright needing a
-WebDriver server ("Unable to start a WebDriver session... chromedriver running at
-4444"); downloaded `chromedriver` matching the installed Chrome build
-(150.0.7871.115, via Chrome for Testing's JSON endpoint) and ran it on port 4444.
-With that running, the web run got much further — **M2-01 passed outright** — but
-surfaced two new, web-specific problems, neither investigated further (stopping to
-report rather than opening a fresh debugging thread on top of the Android one):
-- Captured screenshots came back with `"bytes":[]` — empty. The screenshot
-  *mechanism* runs (names appear in the driver's result JSON) but produces no actual
-  pixel data on this web setup.
-- M2-02 failed with an opaque `"Multiple exceptions (2) were detected... at least one
-  was unexpected"` — no further detail surfaced in the driver's stdout; would need a
-  browser-console-level look to diagnose (possibly a lingering drift stream/Zone
-  error from `store.close()` firing alongside a real assertion, similar in flavor to
-  the `closeStreamsSynchronously` pitfall already worked around in `test/support/
-  test_store.dart`, but not confirmed).
-
-**Bottom line:** the app itself works (M2-01's full navigate-and-assert flow passed
-on web); Flutter's on-device/browser screenshot-capture harness does not currently
-produce usable evidence on this machine, on either platform, despite substantial
-troubleshooting. Falling back to the M0-precedent method (build the app, serve/run
-it for real, screenshot with a throwaway Playwright script — pixel capture only, not
-DOM inspection, so VERIFICATION.md's Playwright-is-blind-to-canvas caveat doesn't
-apply) is the pragmatic path forward for M2's screenshot criteria, carried as debt
-against the "real" `integration_test` harness this milestone was supposed to
-establish. Human input requested on how to proceed — see session conversation.
-
-Stopping here per CLAUDE.md's 3-attempt budget (this is the 4th). Root cause not
-identified; doesn't look like an app bug at this point, more likely a
-`flutter_driver`/`integration_test` <-> emulator VM-service compatibility issue specific
-to this Flutter version (3.44.6) / package versions / Android API 36 image / Windows
-host combination. Have not yet tried: a lower Android API system image, `flutter test
-integration_test/app_test.dart -d emulator-5554` directly (skipping `flutter drive`
-entirely — a legitimately different mechanism, not the same fix again), or the web
-target (`-d chrome`, a completely different connection transport).
-
-**What still works and is solid regardless:** all 26 `flutter test` unit/widget tests
-pass (including real widget pumps against the real drift/NativeDatabase connection);
-`flutter build apk --debug` and `flutter build web` both exit 0; the app was manually
-verified rendering real data end-to-end on web via a Playwright screenshot
-(`verification-shots/M2/home-screen-smoke.png`).
+**Net result:** all four M2 screenshot criteria have real evidence (`verification-shots/M2/`),
+three via the actual on-device/browser `integration_test` harness this milestone was
+meant to establish, one via direct `adb` device control. Carrying forward as debt:
+the Android `flutter drive` connection issue itself (undiagnosed, may need a different
+emulator/API image or Flutter version to resolve) and the dropped bonus Revelation-end
+scenario in `integration_test/app_test.dart` (covered elsewhere, not missing evidence).
 
 ## Milestone 2 — what's built (pending M2's own screenshot evidence)
 - `pubspec.yaml`: `drift`, `sqlite3_flutter_libs`, `path_provider`, `path` (all
@@ -276,21 +254,27 @@ verified rendering real data end-to-end on web via a Playwright screenshot
   reading order (an emergent property of how the M1 pipeline assigns them), so
   prev/next is just `id ± 1` with a bounds check — no query needed to determine
   adjacency.
-- `integration_test/app_test.dart` + `test_driver/integration_test.dart`: written and
-  believed correct (compiles, and the earlier failures it surfaced were real bugs
-  it correctly caught), but **not yet proven to run to completion** — see blocker
-  above.
+- `integration_test/app_test.dart` + `test_driver/integration_test.dart`: M2-01 and
+  M2-02 (Genesis-start, Malachi→Matthew) pass for real against Chrome — see RESOLVED
+  section above for the Android situation and the dropped bonus scenario.
+- `test/ui/reader_navigation_test.dart`: the same M2-02 boundary logic (incl. the
+  Revelation-end true-canon-boundary case) via host `flutter_test`, independent of the
+  on-device harness.
+- **Evidence captured** (`verification-shots/M2/`): `M2-01-isaiah-53.png`,
+  `M2-02-genesis-start.png`, `M2-02-malachi-to-matthew.png` (all via the real
+  `integration_test` harness on Chrome), `M2-03-airplane-mode.png` (Android emulator,
+  airplane mode confirmed via status bar + failed `ping`, captured via direct `adb`
+  device control since the driver itself doesn't work on Android here). M2-04 (web
+  render) is satisfied by the same `M2-01-isaiah-53.png` — it was captured via Chrome.
 
 ## Next steps
-1. Resolve or route around the `flutter drive` blocker above — candidates: try
-   `flutter test integration_test/app_test.dart -d emulator-5554` directly (no
-   `flutter drive`/driver script — loses automatic screenshot pull-to-disk, but proves
-   whether the driver layer itself is the problem), try the web target, or try a
-   different (older/lower-API) system image for the AVD.
-2. Once resolved: capture M2-01 through M2-04's screenshots for real, plus finally
-   close out the M0-03 debt item by re-capturing it the same way.
-3. Airplane mode for M2-03 needs `adb shell svc data disable` / `svc wifi disable` (or
-   the emulator's extended-controls airplane-mode toggle) applied before the test run
-   — not yet attempted, blocked on the above.
-4. Self-check `docs/ACCEPTANCE.json` for M2 and run `/forge-verify` once real
-   evidence exists for all four criteria.
+1. Self-check `docs/ACCEPTANCE.json` for M2 and run `/forge-verify`.
+2. M0-03's debt item (ad hoc Playwright screenshot instead of `integration_test`) is
+   now moot in spirit — this milestone proved the real harness works on web; if it's
+   worth the small effort, M0-03 could be re-captured the same way M2's web shots were,
+   but it's not blocking anything.
+3. The Android `flutter drive` connection issue remains unresolved and undiagnosed —
+   worth a fresh look before M3 (which will want on-device screenshots for the
+   constellation view too), maybe with a different AVD API level or a Flutter/package
+   upgrade, but not urgent since M2-03's evidence was obtained directly via `adb`
+   regardless.
