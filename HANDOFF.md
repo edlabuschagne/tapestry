@@ -5,9 +5,23 @@
 
 ## Current state
 Milestone 0 approved by the human (2026-07-13). Milestone 1 (The data forge) gated
-PASS-WITH-NOTES (2026-07-13) and proceeded automatically per its `auto-verifiable` tag.
-Milestone 2 (The reader) built, real evidence captured for all 4 acceptance criteria
-(2026-07-14), self-check and `/forge-verify` next.
+PASS-WITH-NOTES (2026-07-13) and Milestone 2 (The reader) gated PASS-WITH-NOTES
+(2026-07-14), both proceeding automatically per their `auto-verifiable` tag. Per
+MILESTONES.md's own suggested run boundary ("Run milestones 1-2, stop on any FAIL or
+tripwire, then stop for batch review") and the unusually large amount of
+troubleshooting M2 required, **stopping here for human review before starting
+Milestone 3** rather than proceeding automatically, even though M2's verdict alone
+would permit it.
+
+## Gate result — Milestone 2, /forge-verify, 2026-07-14
+**Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). All 4 acceptance
+criteria verified against real evidence — three via the actual `integration_test`
+harness (Chrome), one via direct `adb` device control (Android, airplane mode). No
+tampering, no scope violation (DO-NOT-BUILD clean: no constellation, no
+translations, no non-default theming), no regression, no tripwire crossed. Two notes,
+both addressed above: the debt ledger was undercounting by one entry (now fixed), and
+the "verse numbers as anchors" deliverable text isn't fully implemented but isn't
+tested by any M2 criterion (flagged for a future decision, not blocking).
 
 ## Gate result — Milestone 1, /forge-verify, 2026-07-13
 **Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). All 6 acceptance
@@ -168,8 +182,19 @@ shared with the human in the session transcript. Summary:
   undiagnosed. Not blocking: M2-03's evidence was obtained via direct `adb` device
   control instead. Worth a fresh look before M3, which will also want on-device
   screenshots.
+- **[low]** `test/support/test_store.dart:16-22` (`// forge-debt` inline marker) — uses
+  synchronous `writeAsBytesSync` instead of async `writeAsBytes` to copy the ~16MB test
+  database, working around an unreproduced `flutter_test` pump-loop deadlock (see the
+  RESOLVED section's note on `File.copy` async hangs). Flagged by the M2 Verifier as
+  missing from this ledger in an earlier draft — added here now.
+- **Not a debt item, a note:** `docs/MILESTONES.md`'s M2 deliverables text promises
+  "verse numbers as anchors"; `lib/ui/reader_screen.dart` renders verse numbers as
+  bold/superscript labels but they aren't tappable/navigable anchors. None of M2's four
+  ACCEPTANCE.json criteria test this, so it doesn't block the gate (flagged by the
+  Verifier as a note, not a failure) — worth a decision before it's forgotten: build it
+  under a later milestone, or explicitly park it in docs/PARKED.md.
 
-Cumulative: 3 open, all low severity. Well under the STOP threshold (8 open / 3
+Cumulative: 4 open, all low severity. Well under the STOP threshold (8 open / 3
 medium).
 
 ## Known issues
