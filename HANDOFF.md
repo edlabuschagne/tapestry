@@ -41,9 +41,22 @@ closed the debt item for real: added `test/data/api_bible_translation_service_te
 which injects a `MockClient` (via `package:http/testing.dart`) returning content
 shaped exactly like the captured real response — verse-bracket parsing and
 poetic-line-break whitespace collapsing are now both regression-tested, still with
-zero live network calls (M4-04 intact). Full battery re-run clean (44/44 tests). The
-human needs to re-run the app with their key once more to confirm the fix actually
-works end-to-end — not yet confirmed as of this note.
+zero live network calls (M4-04 intact). Full battery re-run clean (44/44 tests).
+
+**Human confirmed live behaviour (2026-07-14) — M4's last criterion is now genuinely
+closed.** Real NIV text renders correctly, verse-aligned against BSB (screenshot-
+equivalent confirmed by the human directly in a running `flutter run -d chrome
+--dart-define=BIBLE_API_KEY=...` session). NKJV currently falls back to the BSB-only
+notice — not a bug: the human's API.Bible app/account has only NIV's terms accepted
+so far (visible in their own checkout flow, which only listed NIV, not NKJV), so
+`resolveBibleId('NKJV')` correctly returns null and the app degrades gracefully
+exactly as designed, rather than crashing or showing a blank pane. This is itself
+useful confirmation that the graceful-degradation path works for "key present but
+this translation not licensed," not just "no key at all." NKJV will start working
+automatically, no code change needed, once the human adds it on API.Bible's side.
+
+**Milestone 4 is fully done.** Pushed to `origin/main` and redeployed to GitHub Pages
+(2026-07-14) — see below.
 
 ## Ahead-of-schedule: repo made public + GitHub Pages deploy workflow (2026-07-14)
 At the human's explicit request (wants to share the app with a few people for
@@ -534,21 +547,16 @@ scenario in `integration_test/app_test.dart` (covered elsewhere, not missing evi
   render) is satisfied by the same `M2-01-isaiah-53.png` — it was captured via Chrome.
 
 ## Next steps
-1. **Stopped for human review of Milestone 4** (needs-human-check, PASS-WITH-NOTES).
-   Per the milestone's own last acceptance criterion and CLAUDE.md's human-performed
-   steps list, the human should enter a real API.Bible key locally
-   (`--dart-define=BIBLE_API_KEY=...`) and confirm live NIV behaviour actually works
-   end-to-end — this has never been done by the agent and can't be, by design (M4-04
-   forbids any live call in tests/gate). Also worth the human's own judgment call: is
-   the current NIV-only scope (no NKJV wiring, corrected Settings copy) fine to ship
-   as-is, or worth building out a translation picker before Milestone 5?
-2. Once M4 is reviewed and approved, build Milestone 5 (Shipping): release APK +
-   sideload instructions, About screen attributions (OpenBible CC-BY, BSB, API.Bible
-   ToS), GitHub Pages deployment finished properly (the workflow already exists,
-   ahead of schedule — see above — but M5's own gate still covers the full deploy
-   criteria: release build, About screen, deployed-URL capture with a JS-error
-   listener). `needs-human-check` — deploy + on-phone steps are human-owned.
-   DO-NOT-BUILD: app-store packaging/signing, custom domains, analytics.
+1. **Milestone 4 is closed** — human reviewed, live NIV behaviour confirmed working
+   end-to-end, NKJV confirmed gracefully degrading (pending the human adding it on
+   API.Bible's side, no code change needed when they do). Pushed and redeployed.
+2. Build Milestone 5 (Shipping): release APK + sideload instructions, About screen
+   attributions (OpenBible CC-BY, BSB, API.Bible ToS — doesn't exist yet), GitHub
+   Pages deployment finished properly (the workflow already exists, ahead of
+   schedule — see above — but M5's own gate still covers the full deploy criteria:
+   release build, About screen, deployed-URL capture with a JS-error listener).
+   `needs-human-check` — deploy + on-phone steps are human-owned. DO-NOT-BUILD:
+   app-store packaging/signing, custom domains, analytics.
 3. The Android `flutter drive` connection issue remains unresolved and undiagnosed —
    still not urgent, direct `adb` control remains a proven fallback if M5's on-phone
    evidence needs it.
