@@ -25,7 +25,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
   void didUpdateWidget(covariant ReaderScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.passageId != widget.passageId) {
-      setState(() => _future = _load(widget.passageId));
+      final next = _load(widget.passageId);
+      setState(() {
+        _future = next;
+      });
     }
   }
 
@@ -37,7 +40,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   void _goTo(int passageId) {
-    setState(() => _future = _load(passageId));
+    final next = _load(passageId);
+    setState(() {
+      _future = next;
+    });
   }
 
   @override
