@@ -137,4 +137,42 @@ void main() {
     expect(find.textContaining('In the beginning God created'), findsOneWidget);
     await _screenshot(binding, 'M4-03-no-key-bsb-only');
   });
+
+  testWidgets('the NIV/NKJV picker switches which translation is aligned against BSB', (
+    tester,
+  ) async {
+    final store = await openLocalStore();
+    addTearDown(store.close);
+
+    final romans = booksByOrder.values.firstWhere((b) => b.name == 'Romans');
+    final bsbVerses = await store.versesForChapter(romans.order, 8);
+    final service = FakeTranslationService(
+      bibleIds: const {'NIV': 'fake-niv-id', 'NKJV': 'fake-nkjv-id'},
+      versesByBibleId: {
+        'fake-niv-id': {
+          for (final v in bsbVerses) v.id: VersePresent('NIV text for verse ${v.verse}'),
+        },
+        'fake-nkjv-id': {
+          for (final v in bsbVerses) v.id: VersePresent('NKJV text for verse ${v.verse}'),
+        },
+      },
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ParallelScreen(store: store, translationService: service, book: romans.order, chapter: 8),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('NIV  NIV text for verse ${bsbVerses.first.verse}'), findsOneWidget);
+    await _screenshot(binding, 'M4-06-niv-selected');
+
+    await tester.tap(find.text('NKJV'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('NKJV  NKJV text for verse ${bsbVerses.first.verse}'), findsOneWidget);
+    expect(find.textContaining('NIV text for verse ${bsbVerses.first.verse}'), findsNothing);
+    await _screenshot(binding, 'M4-06-nkjv-selected');
+  });
 }

@@ -21,10 +21,10 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               apiKeyConfigured
-                  ? 'Configured — the NIV parallel view is available.'
+                  ? 'Configured — NIV and NKJV parallel views are available.'
                   : 'Not configured — Tapestry runs in Berean Standard Bible-only '
                         'mode. This is fully offline and complete on its own; the '
-                        'key only unlocks the optional NIV parallel view.',
+                        'key only unlocks the optional NIV/NKJV parallel view.',
             ),
           ],
         ),

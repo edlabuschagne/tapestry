@@ -4,16 +4,19 @@ import 'package:tapestry/data/translation_service.dart';
 import 'package:tapestry/domain/book_index.dart';
 import 'package:tapestry/domain/verse_status.dart';
 
-/// BSB alongside a licensed online translation (NIV by default), aligned
-/// verse-by-verse. If no API key is configured (or this key can't see the
-/// requested translation), falls back to a plain BSB-only explanation —
-/// never a crash, never a blank pane (docs/MILESTONES.md M4-03).
+/// BSB alongside a licensed online translation (NIV or NKJV, switchable),
+/// aligned verse-by-verse. If no API key is configured (or the selected
+/// translation can't be resolved), falls back to a plain BSB-only
+/// explanation — never a crash, never a blank pane (docs/MILESTONES.md
+/// M4-03).
 class ParallelScreen extends StatefulWidget {
+  static const availableTranslations = ['NIV', 'NKJV'];
+
   final LocalStore store;
   final TranslationService? translationService;
   final int book;
   final int chapter;
-  final String translationAbbreviation;
+  final String initialTranslationAbbreviation;
 
   const ParallelScreen({
     super.key,
@@ -21,7 +24,7 @@ class ParallelScreen extends StatefulWidget {
     required this.translationService,
     required this.book,
     required this.chapter,
-    this.translationAbbreviation = 'NIV',
+    this.initialTranslationAbbreviation = 'NIV',
   });
 
   @override
@@ -29,11 +32,13 @@ class ParallelScreen extends StatefulWidget {
 }
 
 class _ParallelScreenState extends State<ParallelScreen> {
+  late String _selectedAbbreviation;
   late Future<_ParallelContent> _future;
 
   @override
   void initState() {
     super.initState();
+    _selectedAbbreviation = widget.initialTranslationAbbreviation;
     _future = _load();
   }
 
@@ -45,7 +50,7 @@ class _ParallelScreenState extends State<ParallelScreen> {
       return _ParallelContent(bsbVerses: bsbVerses, otherStatuses: null);
     }
 
-    final bibleId = await service.resolveBibleId(widget.translationAbbreviation);
+    final bibleId = await service.resolveBibleId(_selectedAbbreviation);
     if (bibleId == null) {
       return _ParallelContent(bsbVerses: bsbVerses, otherStatuses: null);
     }
@@ -57,11 +62,37 @@ class _ParallelScreenState extends State<ParallelScreen> {
     return _ParallelContent(bsbVerses: bsbVerses, otherStatuses: statuses);
   }
 
+  void _selectTranslation(String abbreviation) {
+    if (abbreviation == _selectedAbbreviation) return;
+    setState(() {
+      _selectedAbbreviation = abbreviation;
+      _future = _load();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final book = booksByOrder[widget.book]!;
     return Scaffold(
-      appBar: AppBar(title: Text('${book.name} ${widget.chapter} — Parallel')),
+      appBar: AppBar(
+        title: Text('${book.name} ${widget.chapter} — Parallel'),
+        actions: [
+          if (widget.translationService != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Center(
+                child: SegmentedButton<String>(
+                  segments: [
+                    for (final abbreviation in ParallelScreen.availableTranslations)
+                      ButtonSegment(value: abbreviation, label: Text(abbreviation)),
+                  ],
+                  selected: {_selectedAbbreviation},
+                  onSelectionChanged: (selection) => _selectTranslation(selection.first),
+                ),
+              ),
+            ),
+        ],
+      ),
       body: FutureBuilder<_ParallelContent>(
         future: _future,
         builder: (context, snapshot) {
@@ -71,14 +102,14 @@ class _ParallelScreenState extends State<ParallelScreen> {
           final content = snapshot.data!;
           if (content.otherStatuses == null) {
             return _BsbOnlyNotice(
-              translationAbbreviation: widget.translationAbbreviation,
+              translationAbbreviation: _selectedAbbreviation,
               bsbVerses: content.bsbVerses,
             );
           }
           return _AlignedVerseList(
             bsbVerses: content.bsbVerses,
             otherStatuses: content.otherStatuses!,
-            translationAbbreviation: widget.translationAbbreviation,
+            translationAbbreviation: _selectedAbbreviation,
           );
         },
       ),

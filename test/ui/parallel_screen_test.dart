@@ -172,4 +172,48 @@ void main() {
     expect(find.textContaining('No API.Bible key is configured'), findsOneWidget);
     expect(find.textContaining('In the beginning God created'), findsOneWidget);
   });
+
+  testWidgets('the NIV/NKJV picker switches which translation is aligned against BSB', (
+    tester,
+  ) async {
+    final store = await openTestStore();
+    addTearDown(store.close);
+
+    final romans = booksByOrder.values.firstWhere((b) => b.name == 'Romans');
+    final bsbVerses = await store.versesForChapter(romans.order, 8);
+    final service = FakeTranslationService(
+      bibleIds: const {'NIV': 'fake-niv-id', 'NKJV': 'fake-nkjv-id'},
+      versesByBibleId: {
+        'fake-niv-id': {
+          for (final v in bsbVerses) v.id: VersePresent('NIV text for verse ${v.verse}'),
+        },
+        'fake-nkjv-id': {
+          for (final v in bsbVerses) v.id: VersePresent('NKJV text for verse ${v.verse}'),
+        },
+      },
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ParallelScreen(
+          store: store,
+          translationService: service,
+          book: romans.order,
+          chapter: 8,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Defaults to NIV.
+    expect(find.text('NIV  NIV text for verse 1'), findsOneWidget);
+    expect(find.textContaining('NKJV text for verse 1'), findsNothing);
+
+    await tester.tap(find.text('NKJV'));
+    await tester.pumpAndSettle();
+
+    // Switched to NKJV — NIV text is gone, NKJV text is aligned in its place.
+    expect(find.text('NKJV  NKJV text for verse 1'), findsOneWidget);
+    expect(find.textContaining('NIV text for verse 1'), findsNothing);
+  });
 }

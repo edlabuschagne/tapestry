@@ -12,8 +12,21 @@ accepted as-is, not worth a fix right now). Milestone 4 gated PASS-WITH-NOTES on
 second attempt (2026-07-14; first attempt genuinely FAILed — see below) —
 **stopped here for human review, per its `needs-human-check` tag, regardless of
 verdict.** Do not start Milestone 5 until the human has reviewed M4 and, per its own
-acceptance criteria, entered a real API.Bible key locally to confirm live NIV
+acceptance criteria, entered a real API.Bible key locally to confirm live NIV/NKJV
 behaviour (never done by the agent — the key is human-entered only).
+
+**Post-gate addition (2026-07-14, human-requested):** NKJV wiring was added after the
+M4 gate closed — a `SegmentedButton` in `ParallelScreen`'s app bar switches between
+NIV and NKJV, re-fetching and re-aligning on change (`lib/ui/parallel_screen.dart`).
+This completes what M4's own title/PROJECT_SCOPE.md always named as the goal; no
+`ACCEPTANCE.json` criterion mentions NKJV specifically (all five are NIV-scoped), so
+nothing there was changed — I can't add a criterion myself per CLAUDE.md's flip-only
+rule. Covered by a new test in both `test/ui/parallel_screen_test.dart` and
+`integration_test/parallel_test.dart` (screenshots `M4-06-niv-selected.png` /
+`M4-06-nkjv-selected.png`), full battery re-run clean (41/41 tests, analyze 0 issues,
+build web exit 0). Not independently re-gated by the Verifier — this is a small,
+additive, well-tested change on top of an already-PASSed milestone, not a new
+milestone; flag if you'd like a formal re-gate anyway.
 
 ## Ahead-of-schedule: repo made public + GitHub Pages deploy workflow (2026-07-14)
 At the human's explicit request (wants to share the app with a few people for
@@ -126,6 +139,10 @@ this ships further.
   (44dp-tall tap target) that opens a dialog with the manuscript note.
 - `lib/ui/settings_screen.dart`: minimal key-configured/not status screen (no other
   settings — DO-NOT-BUILD: any account system).
+- **Post-gate:** NKJV wiring added (see "Current state" above for the full note) —
+  `ParallelScreen.availableTranslations = ['NIV', 'NKJV']`, a `SegmentedButton` in its
+  app bar, `_selectTranslation()` re-running `_load()` against the newly picked
+  translation. Settings copy restored to mention both, now accurately.
 - `lib/main.dart`: reads the key via `String.fromEnvironment('BIBLE_API_KEY')` only
   (never hardcoded, never logged); constructs `ApiBibleTranslationService` only if
   non-empty, else `null` (BSB-only mode).
