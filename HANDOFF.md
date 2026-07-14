@@ -207,6 +207,35 @@ symptom):**
    Vulkan device: NVIDIA GeForce RTX 5070 Laptop GPU"). No change — if anything, more
    frames were reported skipped on this run.
 
+**Web target tried as a genuinely different transport (Chrome DevTools, not the Dart
+VM service over adb) — not a 5th attempt at the same Android problem:**
+`flutter drive -d chrome --browser-name=chrome` first failed outright needing a
+WebDriver server ("Unable to start a WebDriver session... chromedriver running at
+4444"); downloaded `chromedriver` matching the installed Chrome build
+(150.0.7871.115, via Chrome for Testing's JSON endpoint) and ran it on port 4444.
+With that running, the web run got much further — **M2-01 passed outright** — but
+surfaced two new, web-specific problems, neither investigated further (stopping to
+report rather than opening a fresh debugging thread on top of the Android one):
+- Captured screenshots came back with `"bytes":[]` — empty. The screenshot
+  *mechanism* runs (names appear in the driver's result JSON) but produces no actual
+  pixel data on this web setup.
+- M2-02 failed with an opaque `"Multiple exceptions (2) were detected... at least one
+  was unexpected"` — no further detail surfaced in the driver's stdout; would need a
+  browser-console-level look to diagnose (possibly a lingering drift stream/Zone
+  error from `store.close()` firing alongside a real assertion, similar in flavor to
+  the `closeStreamsSynchronously` pitfall already worked around in `test/support/
+  test_store.dart`, but not confirmed).
+
+**Bottom line:** the app itself works (M2-01's full navigate-and-assert flow passed
+on web); Flutter's on-device/browser screenshot-capture harness does not currently
+produce usable evidence on this machine, on either platform, despite substantial
+troubleshooting. Falling back to the M0-precedent method (build the app, serve/run
+it for real, screenshot with a throwaway Playwright script — pixel capture only, not
+DOM inspection, so VERIFICATION.md's Playwright-is-blind-to-canvas caveat doesn't
+apply) is the pragmatic path forward for M2's screenshot criteria, carried as debt
+against the "real" `integration_test` harness this milestone was supposed to
+establish. Human input requested on how to proceed — see session conversation.
+
 Stopping here per CLAUDE.md's 3-attempt budget (this is the 4th). Root cause not
 identified; doesn't look like an app bug at this point, more likely a
 `flutter_driver`/`integration_test` <-> emulator VM-service compatibility issue specific
