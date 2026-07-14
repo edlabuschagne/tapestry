@@ -76,13 +76,13 @@ class ApiBibleTranslationService implements TranslationService {
     };
   }
 
-  /// Splits chapter content of the form "1 In the beginning...2 Now the
-  /// earth..." into verse number -> text, assuming each verse starts with
-  /// its number followed by whitespace (true for
-  /// content-type=text&include-verse-numbers=true at the time this was
-  /// written). Approximate by necessity — no test or gate step may call the
-  /// live API to confirm the exact wire format (M4-04); sanity-check this
-  /// against real output during the human's live-key verification.
+  // forge-debt: splits chapter content of the form "1 In the beginning...2
+  // Now the earth..." into verse number -> text, assuming each verse starts
+  // with its number followed by whitespace (true for
+  // content-type=text&include-verse-numbers=true at the time this was
+  // written). Approximate by necessity — no test or gate step may call the
+  // live API to confirm the exact wire format (M4-04); sanity-check this
+  // against real output during the human's live-key verification.
   Map<int, String> _splitIntoVerses(String content) {
     final matches = RegExp(r'(?:^|\s)(\d{1,3})\s').allMatches(content).toList();
     final result = <int, String>{};

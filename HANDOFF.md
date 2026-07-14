@@ -8,7 +8,12 @@ Milestone 0 approved by the human (2026-07-13). Milestone 1 gated PASS-WITH-NOTE
 (2026-07-13), Milestone 2 gated PASS-WITH-NOTES (2026-07-14) and was batch-reviewed.
 Milestone 3 gated PASS-WITH-NOTES (2026-07-14), reviewed and approved by the human —
 cleared to continue into Milestone 4 (the duplicate "Isaiah 53" node label was
-accepted as-is, not worth a fix right now).
+accepted as-is, not worth a fix right now). Milestone 4 gated PASS-WITH-NOTES on the
+second attempt (2026-07-14; first attempt genuinely FAILed — see below) —
+**stopped here for human review, per its `needs-human-check` tag, regardless of
+verdict.** Do not start Milestone 5 until the human has reviewed M4 and, per its own
+acceptance criteria, entered a real API.Bible key locally to confirm live NIV
+behaviour (never done by the agent — the key is human-entered only).
 
 ## Ahead-of-schedule: repo made public + GitHub Pages deploy workflow (2026-07-14)
 At the human's explicit request (wants to share the app with a few people for
@@ -31,6 +36,55 @@ feedback), not part of any milestone's build:
   covers the full deploy criteria (release build, About screen, deployed-URL capture
   with a JS-error listener) when its turn comes.
 
+## Gate result — Milestone 4, /forge-verify, 2026-07-14
+**Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context, second attempt —
+the first attempt genuinely FAILed, see below). All 5 acceptance criteria (M4-01
+through M4-05) verified against real behavioural evidence: `flutter test` 40/40 green,
+`flutter analyze` 0 issues, `flutter build web` exit 0, a grep proof that no test or
+`integration_test` file ever references `ApiBibleTranslationService` or the live
+API.Bible URL (M4-04), a grep proof the key is never hardcoded or logged — only read
+via `String.fromEnvironment` (M4-05), and all four screenshots visually confirmed
+against their criteria (`verification-shots/M4/`). No tampering in `docs/
+ACCEPTANCE.json` (only passes/evidence changed). DO-NOT-BUILD clean (no additional
+translations wired, no persistent NIV caching, no account system). No tripwire
+crossed; autonomy tag correctly left as `needs-human-check`.
+
+**First gate attempt: genuine FAIL, fixed and re-gated — not a rubber-stamp.** The
+Verifier's first pass (fresh context) found two real defects, both touching Check 2/5,
+neither hidden or argued away:
+1. **Check 5 (accessibility floor) — footnote tap target under 44dp.** The
+   footnote-reveal `InkWell` (`lib/ui/parallel_screen.dart`, the centerpiece
+   interaction this exact milestone asks for: "a tappable footnote marker... tap
+   reveals the note") wrapped only its inline text with no minimum size — well under
+   the same 44dp floor this project already enforces for constellation node tap
+   targets. Unmarked as a shortcut. Per VERIFICATION.md's own rule ("FAIL if it
+   touches the Check 5 floor"), this alone was sufficient grounds to withhold PASS.
+2. **Check 2 (correctness) — Settings screen made a false claim.** `lib/ui/
+   settings_screen.dart` told the user "NIV and NKJV parallel views are available"
+   when configured, but no code path anywhere wires up NKJV (`ParallelScreen` defaults
+   to NIV only, no picker, no second call site). A real correctness bug in shipped UI
+   copy, independent of ACCEPTANCE.json's (NIV-only) criteria.
+
+Both fixed in a follow-up commit (`SizedBox(height: 44)` around the footnote
+`InkWell`; Settings copy corrected to only claim NIV) and independently re-verified by
+a second fresh Verifier — which read the *current file contents*, not the fix
+commit's message, before agreeing both were genuinely resolved. Re-ran the full
+battery clean and recaptured the two M4-02 screenshots (layout shifted slightly).
+
+Three low/low-medium notes on the re-gate, none blocking:
+- `lib/data/api_bible_translation_service.dart`'s verse-splitting regex is
+  "approximate by necessity" (can't be checked against the live wire format under
+  M4-04's no-live-call rule) and was missing its `// forge-debt:` marker — added
+  post-gate (see debt ledger).
+- `http: ^1.2.2` was added to `pubspec.yaml` with no citable approval record in any
+  project doc — it *was* explicitly asked and approved via AskUserQuestion mid-session
+  (dart:io's HttpClient doesn't work on Flutter web), just not written down anywhere
+  the Verifier can see. Recorded here now, matching the M1 `sqlite3` precedent.
+- The M4 test/integration_test evidence constructs `ParallelScreen` directly rather
+  than navigating through taps from `TapestryApp` (unlike M2/M3's own tests) — the
+  feature is genuinely reachable via `ReaderScreen`'s "Parallel" button
+  (`lib/ui/reader_screen.dart:69-90`), so this is a thoroughness note, not a gap.
+
 ## Gate result — Milestone 3, /forge-verify, 2026-07-14
 **Verdict: PASS-WITH-NOTES** (independent Verifier, fresh context). All 5 acceptance
 criteria verified against real behavioural evidence — the layout function's
@@ -50,6 +104,61 @@ It's not a bug (different passage IDs, the tap correctly goes to the other passa
 but it could visually read as confusing or redundant. Worth deciding whether that's
 fine as-is or needs a disambiguating label (e.g. appending part of the heading) before
 this ships further.
+
+## Milestone 4 — what's built
+- `lib/domain/verse_status.dart`: sealed `VerseStatus` (`VersePresent(text)` /
+  `VerseFootnoted(note)`) — a verse in an online translation is either there or it
+  isn't, and "isn't" always carries a human-readable reason, never a silent gap.
+- `lib/data/translation_service.dart`: the mockable `TranslationService` interface
+  (`resolveBibleId`, `fetchVerses`). `lib/data/api_bible_translation_service.dart`: the
+  real API.Bible client — resolves a translation abbreviation to its account-specific
+  `bibleId` at runtime (never hardcoded, since that id is account-specific), fetches a
+  whole chapter in one call rather than per-verse to conserve API.Bible's fair-use
+  quota, splits the returned text by verse number via regex (marked `// forge-debt`:
+  necessarily unverified against the live wire format, since no test/gate step may
+  call the live service — the human confirms this at the milestone's own
+  needs-human-check stop). Never constructed by any test.
+- `lib/ui/parallel_screen.dart`: `ParallelScreen` — BSB alongside NIV, aligned
+  verse-by-verse per *chapter* (not per BSB passage: Romans 8 alone spans several
+  passage boundaries, and translation alignment is inherently chapter/verse-based).
+  Falls back to a plain BSB-only notice when no key is configured or the translation
+  can't be resolved. Footnoted verses render a tappable `[footnote]` marker
+  (44dp-tall tap target) that opens a dialog with the manuscript note.
+- `lib/ui/settings_screen.dart`: minimal key-configured/not status screen (no other
+  settings — DO-NOT-BUILD: any account system).
+- `lib/main.dart`: reads the key via `String.fromEnvironment('BIBLE_API_KEY')` only
+  (never hardcoded, never logged); constructs `ApiBibleTranslationService` only if
+  non-empty, else `null` (BSB-only mode).
+- **Tests**, all against a `FakeTranslationService` that never touches the network:
+  `test/ui/parallel_screen_test.dart` (M4-01/02/03, host `flutter_test`) and
+  `integration_test/parallel_test.dart` (same three scenarios, real Chrome via
+  `flutter drive` + chromedriver, screenshots to `verification-shots/M4/`).
+- **Two flutter_test gotchas hit and fixed, worth remembering:**
+  - drift's default `MigrationStrategy()` auto-creates the schema (`m.createAll()`) on
+    a fresh database — a test that also issues its own `CREATE TABLE` on a brand-new
+    temp-file db collides with it ("table verses already exists"). Fix: don't
+    hand-create the schema on a fresh db; just insert into what drift already made.
+  - `ListView`/`ListView.builder` both lazily mount only near-viewport items via the
+    sliver protocol — passing a literal `children:` list does *not* avoid this (only
+    changes how the widget is supplied, not whether Elements are eagerly built). A
+    39-verse Romans 8 test needed `scrollUntilVisible` per verse, same as the lazy
+    book/chapter grids already established in M2; the default 300px scroll delta was
+    coarse enough to jump clean over a short verse's mount window between visibility
+    checks (reproduced with Romans 8:6) — fixed with a smaller delta (60px) and a
+    higher `maxScrolls` cap.
+- **Web `integration_test` via `flutter drive`, one real flag mistake, worth
+  recording:** `--web-launch-url` is "the URL to open in the browser," **not** the
+  chromedriver connection — that's `--driver-port`. Using the wrong flag didn't error
+  outright; it let the app boot and even run partway before hanging or crashing the
+  Chrome tab unpredictably (looked like flakiness, wasn't). `--driver-port=4444`
+  fixed it outright. Also hit: the web/WASM sqlite engine is strict SQL and rejects a
+  double-quoted string literal as an invalid identifier reference (native sqlite3
+  permits it as a legacy quirk) — use single quotes in any raw SQL run against a
+  web-target store.
+- **Also found and killed dozens of leaked `chrome.exe` processes** from earlier
+  interrupted `flutter drive` runs accumulating unseen — worth a clean
+  `taskkill //F //IM chrome.exe //T` before any web integration_test session if
+  runs start behaving strangely (crashes, hangs) with no code-side explanation.
 
 ## Milestone 3 — what's built
 - `lib/domain/constellation.dart`: `layoutConstellation()` — a pure function, ordered
@@ -276,8 +385,22 @@ shared with the human in the session transcript. Summary:
   missing from this ledger in an earlier draft — added here now.
 ~~Verse-number-anchors gap~~ **Closed, parked** — resolved to `docs/PARKED.md` (see M2
 loose-ends cleanup); no longer counted below.
+- **[low]** `lib/data/api_bible_translation_service.dart` (`_splitIntoVerses`) — regex-
+  based verse-splitting on API.Bible's chapter text response, "approximate by
+  necessity" since no test/gate step may call the live service to confirm the exact
+  wire format (M4-04). Marked inline with `// forge-debt`. The human's live-key check
+  at M4's needs-human-check stop is exactly what confirms or corrects this.
+- **[low]** `pubspec.yaml` — `http: ^1.2.2` added without a recorded-in-docs approval
+  trail (the M4 Verifier couldn't see it anywhere). It *was* asked and approved
+  mid-session (dart:io's `HttpClient` doesn't work on Flutter web) — recording that
+  here now, same pattern as M1's retroactive `sqlite3` note above.
+- **[low]** M4's test/integration_test evidence (`test/ui/parallel_screen_test.dart`,
+  `integration_test/parallel_test.dart`) constructs `ParallelScreen` directly rather
+  than navigating through taps from `TapestryApp`, unlike M2/M3's own tests. The
+  feature is genuinely reachable via `ReaderScreen`'s "Parallel" button
+  (`lib/ui/reader_screen.dart:69-90`) — a thoroughness note, not a functional gap.
 
-Cumulative: 3 open, all low severity. Well under the STOP threshold (8 open / 3
+Cumulative: 6 open, all low severity. Well under the STOP threshold (8 open / 3
 medium). (M3's Verifier caught this count drifting to 4 in an earlier draft that
 double-counted a closed item — fixed.)
 
@@ -377,13 +500,21 @@ scenario in `integration_test/app_test.dart` (covered elsewhere, not missing evi
   render) is satisfied by the same `M2-01-isaiah-53.png` — it was captured via Chrome.
 
 ## Next steps
-1. Build Milestone 3 (The constellation): `ConstellationView` (`CustomPainter`, center
-   passage + up to 12 top-weighted neighbours on a deterministic radial orbit, edge
-   thickness ∝ weight), tap-to-recenter with the reader pane following, entry point
-   from ReaderScreen. `needs-human-check` — stops for review regardless of gate
-   verdict. DO-NOT-BUILD: force-directed layout, whole-Bible view, pan/zoom physics,
-   animation beyond simple transitions.
-2. The Android `flutter drive` connection issue remains unresolved and undiagnosed —
-   worth a fresh look before M3's own on-device screenshots are needed, maybe with a
-   different AVD API level or a Flutter/package upgrade. Not urgent — direct `adb`
-   control is a proven fallback.
+1. **Stopped for human review of Milestone 4** (needs-human-check, PASS-WITH-NOTES).
+   Per the milestone's own last acceptance criterion and CLAUDE.md's human-performed
+   steps list, the human should enter a real API.Bible key locally
+   (`--dart-define=BIBLE_API_KEY=...`) and confirm live NIV behaviour actually works
+   end-to-end — this has never been done by the agent and can't be, by design (M4-04
+   forbids any live call in tests/gate). Also worth the human's own judgment call: is
+   the current NIV-only scope (no NKJV wiring, corrected Settings copy) fine to ship
+   as-is, or worth building out a translation picker before Milestone 5?
+2. Once M4 is reviewed and approved, build Milestone 5 (Shipping): release APK +
+   sideload instructions, About screen attributions (OpenBible CC-BY, BSB, API.Bible
+   ToS), GitHub Pages deployment finished properly (the workflow already exists,
+   ahead of schedule — see above — but M5's own gate still covers the full deploy
+   criteria: release build, About screen, deployed-URL capture with a JS-error
+   listener). `needs-human-check` — deploy + on-phone steps are human-owned.
+   DO-NOT-BUILD: app-store packaging/signing, custom domains, analytics.
+3. The Android `flutter drive` connection issue remains unresolved and undiagnosed —
+   still not urgent, direct `adb` control remains a proven fallback if M5's on-phone
+   evidence needs it.
