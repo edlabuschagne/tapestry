@@ -79,9 +79,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     for (final verse in content.verses)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: RichText(
-                          text: TextSpan(
-                            style: DefaultTextStyle.of(context).style,
+                        child: Text.rich(
+                          TextSpan(
                             children: [
                               TextSpan(
                                 text: '${verse.verse} ',

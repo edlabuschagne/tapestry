@@ -143,6 +143,13 @@ shared with the human in the session transcript. Summary:
   writer this milestone's pipeline needs and is drift's own underlying dependency, so
   this isn't a new/unsanctioned package. `drift` itself (the app's query layer) stays
   out until M2 actually reads the database, keeping M1 scoped to just the pipeline.
+- **Asked the human before adding `drift` for M2** (learned from the M1 process gap)
+  — approved. Also added its necessary companions (`sqlite3_flutter_libs`,
+  `path_provider`, `path`) under that same approval rather than asking once per
+  package, since none of them is an independent feature choice — each is required
+  machinery to make the already-approved drift/SQLite decision actually run on
+  Android + web. `integration_test`/`flutter_driver` ship with the Flutter SDK
+  (same tier as `flutter_test`), not pub.dev packages needing separate approval.
 
 ## Debt ledger (forge-debt)
 - **[low]** M0-03 screenshot captured via ad hoc static-serve + Playwright instead of
@@ -168,14 +175,93 @@ medium).
   is rejected and counted (1 of 344,799), not a crash. Not a bug, not debt — Check 5
   validation working as designed.
 
+## BLOCKER — `flutter drive` hangs on the Android emulator (2026-07-14)
+Built out full Milestone 2 (drift wiring, navigation, ReaderScreen, prev/next,
+`integration_test`/`test_driver` harness — see below) but cannot get
+`flutter drive --driver=test_driver/integration_test.dart --target=integration_test/app_test.dart
+-d emulator-5554` to complete against the AVD (`tapestry_avd`, Android API 36 x86_64,
+`google_apis_playstore` system image).
+
+**Symptom, identical across 4 distinct attempts:** the app installs and launches, the
+on-device test genuinely starts (`I/flutter: 00:00 +0: <test name>` prints), the driver
+logs "Connected to Flutter application" — then within ~10-30s: "request_data message is
+taking a long time to complete..." followed by `DriverError: ... ext.flutter.driver:
+(112) Service has disappeared`. The app process is gone by the time logcat can be
+inspected, so it's unclear whether the on-device test itself ever completed or hung too.
+
+**What was tried (each a distinct hypothesis, each ruled out without changing the
+symptom):**
+1. Book/chapter list items not scrolled into view before tapping (`ListView.builder`
+   is lazy) — fixed with `tester.scrollUntilVisible`. Real, necessary fix, didn't
+   resolve the hang.
+2. Verse text rendered via raw `RichText`, which `find.textContaining` can't see (only
+   `Text` is checked) — fixed by switching to `Text.rich`. Real app bug, correctly
+   fixed, didn't resolve the hang.
+3. Test used a test-only `openTestStore()` (sync file copy) instead of the app's real
+   `openLocalStore()` — switched the integration test to the production code path.
+   No change.
+4. Emulator's AVD had `hw.gpu.enabled=no` (pure software rendering, found via
+   `emulator -accel-check` + inspecting `config.ini`) — fixed
+   (`hw.gpu.enabled=yes`), confirmed on relaunch that it now uses the host's real
+   NVIDIA GPU via WHPX/gfxstream (`emulator -avd tapestry_avd` log shows "Selecting
+   Vulkan device: NVIDIA GeForce RTX 5070 Laptop GPU"). No change — if anything, more
+   frames were reported skipped on this run.
+
+Stopping here per CLAUDE.md's 3-attempt budget (this is the 4th). Root cause not
+identified; doesn't look like an app bug at this point, more likely a
+`flutter_driver`/`integration_test` <-> emulator VM-service compatibility issue specific
+to this Flutter version (3.44.6) / package versions / Android API 36 image / Windows
+host combination. Have not yet tried: a lower Android API system image, `flutter test
+integration_test/app_test.dart -d emulator-5554` directly (skipping `flutter drive`
+entirely — a legitimately different mechanism, not the same fix again), or the web
+target (`-d chrome`, a completely different connection transport).
+
+**What still works and is solid regardless:** all 26 `flutter test` unit/widget tests
+pass (including real widget pumps against the real drift/NativeDatabase connection);
+`flutter build apk --debug` and `flutter build web` both exit 0; the app was manually
+verified rendering real data end-to-end on web via a Playwright screenshot
+(`verification-shots/M2/home-screen-smoke.png`).
+
+## Milestone 2 — what's built (pending M2's own screenshot evidence)
+- `pubspec.yaml`: `drift`, `sqlite3_flutter_libs`, `path_provider`, `path` (all
+  approved by the human before adding — see Decisions below), plus
+  `integration_test`/`flutter_driver` (ship with the Flutter SDK, same tier as
+  `flutter_test`, no separate approval needed).
+- `lib/data/local_store.dart`: drift `Table` classes mirroring the pipeline's physical
+  schema exactly (column names via `.named(...)` where they'd otherwise collide with
+  drift's own DSL — e.g. `Verses.content` maps to the physical `text` column, since a
+  column getter literally named `text` shadows drift's `text()` column-builder
+  function). Query methods: `passageById`, `versesForPassage`, `bookById`, `allBooks`,
+  `passageContainingVerse` (resolves a chapter jump to whichever passage's range
+  contains that verse — a chapter's first verse may belong to a passage that started
+  in an earlier chapter), `maxChapterForBook`, `maxPassageId`.
+- `lib/data/db_connection_{native,web}.dart`: native copies the bundled asset to the
+  app's support directory on first launch (Android can't open a db file straight out
+  of the asset bundle); web uses `WasmDatabase.open` with prebuilt `sqlite3.wasm` +
+  `drift_worker.js` (downloaded matching the exact installed `sqlite3`/`drift`
+  versions from their GitHub releases — see below), seeded from the same bundled
+  asset via `rootBundle`.
+- `lib/ui/`: `HomeScreen` (66-book list) -> `BookScreen` (chapter grid, chapter count
+  queried live rather than hand-copied) -> `ReaderScreen` (heading + verses with
+  verse-number anchors, Previous/Next). Passage ids are sequential in canonical
+  reading order (an emergent property of how the M1 pipeline assigns them), so
+  prev/next is just `id ± 1` with a bounds check — no query needed to determine
+  adjacency.
+- `integration_test/app_test.dart` + `test_driver/integration_test.dart`: written and
+  believed correct (compiles, and the earlier failures it surfaced were real bugs
+  it correctly caught), but **not yet proven to run to completion** — see blocker
+  above.
+
 ## Next steps
-1. Build Milestone 2 (The reader): book/chapter navigation, ReaderScreen rendering a
-   passage (heading + verses, verse-number anchors), prev/next passage, drift wiring
-   of the bundled `assets/bible.db` on both Android and web.
-2. Get a real Android emulator or the phone connected before M2's gate — needed for
-   the airplane-mode criterion (M2-03) regardless, and also lets M0-03's screenshot
-   (carried-forward debt) finally be re-captured through `flutter test
-   integration_test` instead of the ad hoc static-serve method used at M0.
-3. Add `drift` as a dependency when M2 actually starts querying the database — ask
-   before adding it, even though it's the same already-decided architecture, per the
-   process gap flagged at M1's gate.
+1. Resolve or route around the `flutter drive` blocker above — candidates: try
+   `flutter test integration_test/app_test.dart -d emulator-5554` directly (no
+   `flutter drive`/driver script — loses automatic screenshot pull-to-disk, but proves
+   whether the driver layer itself is the problem), try the web target, or try a
+   different (older/lower-API) system image for the AVD.
+2. Once resolved: capture M2-01 through M2-04's screenshots for real, plus finally
+   close out the M0-03 debt item by re-capturing it the same way.
+3. Airplane mode for M2-03 needs `adb shell svc data disable` / `svc wifi disable` (or
+   the emulator's extended-controls airplane-mode toggle) applied before the test run
+   — not yet attempted, blocked on the above.
+4. Self-check `docs/ACCEPTANCE.json` for M2 and run `/forge-verify` once real
+   evidence exists for all four criteria.

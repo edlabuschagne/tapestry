@@ -66,6 +66,14 @@ dev_dependencies:
   drift_dev: ^2.22.1
   build_runner: ^2.4.13
 
+  # Flutter's own on-device/browser test harness (VERIFICATION.md is explicit
+  # that Playwright can't see Flutter web's canvas) — ships with the Flutter
+  # SDK, same tier as flutter_test above, not a new pub.dev package.
+  integration_test:
+    sdk: flutter
+  flutter_driver:
+    sdk: flutter
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
